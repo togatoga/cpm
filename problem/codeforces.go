@@ -2,16 +2,17 @@ package problem
 
 import (
 	"fmt"
+	"net/url"
 
 	"github.com/PuerkitoBio/goquery"
 )
 
 type Codeforces struct {
-	URL string
+	URL *url.URL
 	Doc *goquery.Document
 }
 
-func NewCodeforces(URL string) (*Codeforces, error) {
+func NewCodeforces(URL *url.URL) (*Codeforces, error) {
 	c := new(Codeforces)
 	c.URL = URL
 	err := c.newDocument()
@@ -21,13 +22,18 @@ func NewCodeforces(URL string) (*Codeforces, error) {
 	return c, nil
 }
 func (c *Codeforces) newDocument() error {
-	doc, err := goquery.NewDocument(c.URL)
+	doc, err := goquery.NewDocument(c.URL.String())
 	if err != nil {
 		return err
 	}
 	c.Doc = doc
 	return nil
 }
+func (c *Codeforces) GetContestSiteName() string {
+	url := c.URL
+	return url.Host
+}
+
 func (c *Codeforces) GetContestName() (string, error) {
 	doc := c.Doc
 	name, ok := doc.Find("span > a").First().Attr("title")
@@ -43,4 +49,16 @@ func (c *Codeforces) GetProblemName() (string, error) {
 		return "", fmt.Errorf("Can not find Problem Name")
 	}
 	return s.Text(), nil
+}
+func (c *Codeforces) GetTimeLimit() (string, error) {
+	return "", nil
+}
+func (c *Codeforces) GetMemoryLimit() (string, error) {
+	return "", nil
+}
+func (c *Codeforces) GetSampleInputs() ([]string, error) {
+	return []string{}, nil
+}
+func (c *Codeforces) GetSampleOutpus() ([]string, error) {
+	return []string{}, nil
 }

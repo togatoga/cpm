@@ -16,8 +16,13 @@ package cmd
 
 import (
 	"fmt"
+	"net/url"
+	"os"
+	"path/filepath"
 
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
+	"github.com/togatoga/cpm/problem"
 )
 
 // getCmd represents the get command
@@ -31,8 +36,55 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("get called")
+		for _, arg := range args {
+			url, err := url.Parse(arg)
+			if err != nil {
+				continue
+			}
+			p, err := getProblem(url)
+			if err != nil {
+				continue
+			}
+			if createProblemDir(p) != nil {
+				continue
+			}
+		}
 	},
+}
+
+func createProblemDir(p problem.Problem) error {
+	dir, err := homedir.Dir()
+	if err != nil {
+		return err
+	}
+	contestSiteName := p.GetContestSiteName()
+	contestName, err := p.GetContestName()
+	if err != nil {
+		return err
+	}
+	contestProblem, err := p.GetProblemName()
+	if err != nil {
+		return err
+	}
+	dir = filepath.Join(dir, ".cpm", contestSiteName, contestName, contestProblem)
+	if err := os.MkdirAll(dir, 0766); err != nil {
+		return fmt.Errorf("Can not create directory: %v", err)
+	}
+	fmt.Printf("Create directory %v", dir)
+	return nil
+}
+
+func getProblem(url *url.URL) (problem.Problem, error) {
+	host := url.Host
+	switch host {
+	case "codeforces.com":
+		p, err := problem.NewCodeforces(url)
+		if err != nil {
+			return nil, err
+		}
+		return p, nil
+	}
+	return nil, fmt.Errorf("Can not parse this URL %s", url.String())
 }
 
 func init() {
