@@ -19,6 +19,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -66,6 +67,10 @@ func createProblemDir(p problem.Problem) error {
 	if err != nil {
 		return err
 	}
+	contestSiteName = strings.Replace(contestSiteName, " ", "", -1)
+	contestName = strings.Replace(contestName, " ", "", -1)
+	contestProblem = strings.Replace(contestProblem, " ", "", -1)
+
 	dir = filepath.Join(dir, ".cpm", "src", contestSiteName, contestName, contestProblem)
 	if err := os.MkdirAll(dir, 0766); err != nil {
 		return fmt.Errorf("Can not create directory: %v", err)
