@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
-	"strconv"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -40,7 +39,7 @@ to quickly create a Cobra application.`,
 			return
 		}
 		for _, dir := range problemDirs {
-			fmt.Println(strconv.Quote(dir))
+			fmt.Println(dir)
 		}
 	},
 }

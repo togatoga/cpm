@@ -67,6 +67,7 @@ func createProblemDir(p problem.Problem) error {
 	if err != nil {
 		return err
 	}
+
 	contestSiteName = strings.Replace(contestSiteName, " ", "", -1)
 	contestName = strings.Replace(contestName, " ", "", -1)
 	contestProblem = strings.Replace(contestProblem, " ", "", -1)
