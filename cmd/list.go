@@ -16,7 +16,11 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
+	"strconv"
 
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 )
 
@@ -31,8 +35,52 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("list called")
+		problemDirs, err := getProblemDirs()
+		if err != nil {
+			return
+		}
+		for _, dir := range problemDirs {
+			fmt.Println(strconv.Quote(dir))
+		}
 	},
+}
+
+func getProblemDirs() ([]string, error) {
+	dir, err := homedir.Dir()
+	if err != nil {
+		return nil, err
+	}
+	baseDir := filepath.Join(dir, ".cpm", "src")
+	sites, err := ioutil.ReadDir(baseDir)
+	if err != nil {
+		return nil, err
+	}
+	var problemDirs []string
+
+	for _, site := range sites {
+		if site.IsDir() {
+			contests, err := ioutil.ReadDir(filepath.Join(baseDir, site.Name()))
+			if err != nil {
+				return nil, err
+			}
+			for _, contest := range contests {
+				if contest.IsDir() {
+					problems, err := ioutil.ReadDir(filepath.Join(baseDir, site.Name(), contest.Name()))
+					if err != nil {
+						return nil, err
+					}
+					for _, problem := range problems {
+						if err != nil {
+							return nil, err
+						}
+						problemDir := filepath.Join(baseDir, site.Name(), contest.Name(), problem.Name())
+						problemDirs = append(problemDirs, problemDir)
+					}
+				}
+			}
+		}
+	}
+	return problemDirs, nil
 }
 
 func init() {

@@ -66,7 +66,7 @@ func createProblemDir(p problem.Problem) error {
 	if err != nil {
 		return err
 	}
-	dir = filepath.Join(dir, ".cpm", contestSiteName, contestName, contestProblem)
+	dir = filepath.Join(dir, ".cpm", "src", contestSiteName, contestName, contestProblem)
 	if err := os.MkdirAll(dir, 0766); err != nil {
 		return fmt.Errorf("Can not create directory: %v", err)
 	}
