@@ -2,16 +2,17 @@ package problem
 
 import (
 	"fmt"
+	"net/url"
 
 	"github.com/PuerkitoBio/goquery"
 )
 
 type AtCoder struct {
-	URL string
+	URL *url.URL
 	Doc *goquery.Document
 }
 
-func NewAtCoder(URL string) (*AtCoder, error) {
+func NewAtCoder(URL *url.URL) (*AtCoder, error) {
 	c := new(AtCoder)
 	c.URL = URL
 	err := c.newDocument()
@@ -20,8 +21,14 @@ func NewAtCoder(URL string) (*AtCoder, error) {
 	}
 	return c, nil
 }
+
+func (c *AtCoder) GetContestSiteName() string {
+	url := c.URL
+	return url.Host
+}
+
 func (c *AtCoder) newDocument() error {
-	doc, err := goquery.NewDocument(c.URL)
+	doc, err := goquery.NewDocument(c.URL.String())
 	if err != nil {
 		return err
 	}
@@ -43,4 +50,17 @@ func (c *AtCoder) GetProblemName() (string, error) {
 		return "", fmt.Errorf("Can not find Problem Name")
 	}
 	return s.Text(), nil
+}
+
+func (c *AtCoder) GetTimeLimit() (string, error) {
+	return "", nil
+}
+func (c *AtCoder) GetMemoryLimit() (string, error) {
+	return "", nil
+}
+func (c *AtCoder) GetSampleInputs() ([]string, error) {
+	return []string{}, nil
+}
+func (c *AtCoder) GetSampleOutpus() ([]string, error) {
+	return []string{}, nil
 }

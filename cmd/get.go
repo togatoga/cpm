@@ -44,9 +44,11 @@ to quickly create a Cobra application.`,
 			}
 			p, err := getProblem(url)
 			if err != nil {
+				fmt.Printf("Error: %v\n", err)
 				continue
 			}
-			if createProblemDir(p) != nil {
+			if err := createProblemDir(p); err != nil {
+				fmt.Printf("Error: %v\n", err)
 				continue
 			}
 		}
@@ -89,7 +91,14 @@ func getProblem(url *url.URL) (problem.Problem, error) {
 			return nil, err
 		}
 		return p, nil
+	case "beta.atcoder.jp":
+		p, err := problem.NewAtCoder(url)
+		if err != nil {
+			return nil, err
+		}
+		return p, nil
 	}
+
 	return nil, fmt.Errorf("Can not parse this URL %s", url.String())
 }
 
