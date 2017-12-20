@@ -16,7 +16,7 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	homedir "github.com/mitchellh/go-homedir"
@@ -50,35 +50,22 @@ func getProblemDirs() ([]string, error) {
 		return nil, err
 	}
 	baseDir := filepath.Join(dir, ".cpm", "src")
-	sites, err := ioutil.ReadDir(baseDir)
-	if err != nil {
-		return nil, err
-	}
-	var problemDirs []string
 
-	for _, site := range sites {
-		if site.IsDir() {
-			contests, err := ioutil.ReadDir(filepath.Join(baseDir, site.Name()))
-			if err != nil {
-				return nil, err
-			}
-			for _, contest := range contests {
-				if contest.IsDir() {
-					problems, err := ioutil.ReadDir(filepath.Join(baseDir, site.Name(), contest.Name()))
-					if err != nil {
-						return nil, err
-					}
-					for _, problem := range problems {
-						if err != nil {
-							return nil, err
-						}
-						problemDir := filepath.Join(baseDir, site.Name(), contest.Name(), problem.Name())
-						problemDirs = append(problemDirs, problemDir)
-					}
-				}
-			}
+	var problemDirs []string
+	err = filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
 		}
+		if !info.IsDir() && info.Name() == ".problem" {
+			p := filepath.Dir(path)
+			problemDirs = append(problemDirs, p)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("Fail to walk dir: %v", err)
 	}
+
 	return problemDirs, nil
 }
 
