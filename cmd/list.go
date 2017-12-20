@@ -26,7 +26,7 @@ import (
 // listCmd represents the list command
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "A brief description of your command",
+	Short: "List problems",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
