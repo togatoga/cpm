@@ -78,6 +78,13 @@ func createProblemDir(p problem.Problem) error {
 	if err := os.MkdirAll(dir, 0766); err != nil {
 		return fmt.Errorf("Can not create directory: %v", err)
 	}
+	file := filepath.Join(dir, ".problem")
+	f, err := os.Create(file)
+	defer f.Close()
+	if err != nil {
+		return fmt.Errorf("Can not create file: %v", err)
+	}
+
 	fmt.Printf("Create directory %v", dir)
 	return nil
 }
