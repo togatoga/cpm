@@ -71,5 +71,13 @@ func (c *Codeforces) IsContestPage() bool {
 }
 
 func (c *Codeforces) IsProblemPage() bool {
-	return false
+	contestName, err := c.GetContestName()
+	if err != nil || contestName == "" {
+		return false
+	}
+	problemName, err := c.GetProblemName()
+	if err != nil || problemName == "" {
+		return false
+	}
+	return true
 }
