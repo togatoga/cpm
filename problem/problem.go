@@ -9,6 +9,7 @@ type Problem interface {
 	GetMemoryLimit() (string, error)
 	GetSampleInputs() ([]string, error)
 	GetSampleOutpus() ([]string, error)
+	GetProblemURLSet() ([]string, error)
 	IsContestPage() bool
 	IsProblemPage() bool
 }

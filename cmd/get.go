@@ -37,9 +37,11 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		for _, arg := range args {
+		for i := 0; i < len(args); i++ {
+			arg := args[i]
 			url, err := url.Parse(arg)
 			if err != nil {
+				fmt.Printf("Error: %v\n", err)
 				continue
 			}
 			p, err := getProblem(url)
@@ -51,6 +53,15 @@ to quickly create a Cobra application.`,
 				if err := createProblemDir(p); err != nil {
 					fmt.Printf("Error: %v\n", err)
 					continue
+				}
+			} else if p.IsContestPage() {
+				urlSet, err := p.GetProblemURLSet()
+				if err != nil {
+					fmt.Printf("Error: %v\n", err)
+					continue
+				}
+				for _, url := range urlSet {
+					args = append(args, url)
 				}
 			}
 		}
@@ -87,7 +98,7 @@ func createProblemDir(p problem.Problem) error {
 		return fmt.Errorf("Can not create file: %v", err)
 	}
 
-	fmt.Printf("Create directory %v", dir)
+	fmt.Printf("Create directory %v\n", dir)
 	return nil
 }
 

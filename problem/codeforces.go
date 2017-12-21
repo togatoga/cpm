@@ -63,6 +63,9 @@ func (c *Codeforces) GetSampleOutpus() ([]string, error) {
 	return []string{}, nil
 }
 
+func (c *Codeforces) GetProblemURLSet() ([]string, error) {
+	return nil, nil
+}
 func (c *Codeforces) IsContestPage() bool {
 	return false
 }

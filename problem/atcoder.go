@@ -66,16 +66,37 @@ func (c *AtCoder) GetSampleOutpus() ([]string, error) {
 	return []string{}, nil
 }
 
+func (c *AtCoder) GetProblemURLSet() ([]string, error) {
+	doc := c.Doc
+	urlSet := []string{}
+	doc.Find("tbody > tr").Each(func(i int, s *goquery.Selection) {
+		url, ok := s.Find("td > a").First().Attr("href")
+		if ok {
+			urlSet = append(urlSet, c.URL.Scheme+"://"+c.URL.Host+url)
+		}
+	})
+	if len(urlSet) == 0 {
+		return nil, fmt.Errorf("urlSet is empty")
+	}
+	return urlSet, nil
+}
+
 func (c *AtCoder) IsContestPage() bool {
-	return true
+	url := c.URL
+	p := strings.Split(url.Path, "/")[1:]
+	n := len(p)
+	if n == 3 && p[n-1] == "tasks" {
+		return true
+	}
+	return false
 }
 
 func (c *AtCoder) IsProblemPage() bool {
 	url := c.URL
-	p := strings.Split(url.Path, "/")
+	p := strings.Split(url.Path, "/")[1:]
 	n := len(p)
 
-	if n == 5 && p[n-2] == "tasks" && p[n-1] != "" {
+	if n == 4 && p[n-2] == "tasks" && p[n-1] != "" {
 		return true
 	}
 	return false
