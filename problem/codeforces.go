@@ -62,3 +62,11 @@ func (c *Codeforces) GetSampleInputs() ([]string, error) {
 func (c *Codeforces) GetSampleOutpus() ([]string, error) {
 	return []string{}, nil
 }
+
+func (c *Codeforces) IsContestPage() bool {
+	return false
+}
+
+func (c *Codeforces) IsProblemPage() bool {
+	return false
+}

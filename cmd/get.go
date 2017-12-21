@@ -47,9 +47,11 @@ to quickly create a Cobra application.`,
 				fmt.Printf("Error: %v\n", err)
 				continue
 			}
-			if err := createProblemDir(p); err != nil {
-				fmt.Printf("Error: %v\n", err)
-				continue
+			if p.IsProblemPage() {
+				if err := createProblemDir(p); err != nil {
+					fmt.Printf("Error: %v\n", err)
+					continue
+				}
 			}
 		}
 	},

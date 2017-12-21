@@ -3,6 +3,7 @@ package problem
 import (
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -63,4 +64,19 @@ func (c *AtCoder) GetSampleInputs() ([]string, error) {
 }
 func (c *AtCoder) GetSampleOutpus() ([]string, error) {
 	return []string{}, nil
+}
+
+func (c *AtCoder) IsContestPage() bool {
+	return true
+}
+
+func (c *AtCoder) IsProblemPage() bool {
+	url := c.URL
+	p := strings.Split(url.Path, "/")
+	n := len(p)
+
+	if n == 5 && p[n-2] == "tasks" && p[n-1] != "" {
+		return true
+	}
+	return false
 }
