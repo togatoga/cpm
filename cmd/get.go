@@ -29,7 +29,7 @@ import (
 // getCmd represents the get command
 var getCmd = &cobra.Command{
 	Use:   "get",
-	Short: "A brief description of your command",
+	Short: "Create problem directory",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
@@ -37,8 +37,15 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		values := map[string]bool{}
 		for i := 0; i < len(args); i++ {
 			arg := args[i]
+
+			if _, ok := values[arg]; ok {
+				continue
+			}
+			values[arg] = true
+
 			url, err := url.Parse(arg)
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
