@@ -3,6 +3,7 @@ package problem
 import (
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -60,7 +61,39 @@ func (c *Codeforces) GetMemoryLimit() (string, error) {
 	return "", nil
 }
 func (c *Codeforces) GetSampleTestCase() ([]TestCase, error) {
-	return nil, nil
+	doc := c.Doc
+	inputs := []string{}
+	outputs := []string{}
+	doc.Find("div.sample-tests > div.sample-test > div").Each(func(i int, s *goquery.Selection) {
+		inputHtml, err := s.Find("div.input > pre").Html()
+		if err != nil {
+			return
+		}
+		input := strings.Replace(inputHtml, "<br/>", "\n", -1)
+
+		outputHtml, err := s.Find("div.output > pre").Html()
+		if err != nil {
+			return
+		}
+		output := strings.Replace(outputHtml, "<br/>", "\n", -1)
+
+		if input != "" {
+			inputs = append(inputs, input)
+		}
+		if output != "" {
+			outputs = append(outputs, output)
+		}
+	})
+	n := len(inputs)
+	if len(inputs) != len(outputs) || n == 0 {
+		return nil, fmt.Errorf("Can not get SampleTestCase")
+	}
+
+	testCases := []TestCase{}
+	for i := 0; i < n; i++ {
+		testCases = append(testCases, TestCase{Input: inputs[i], Output: outputs[i]})
+	}
+	return testCases, nil
 }
 
 func (c *Codeforces) GetProblemURLSet() ([]string, error) {

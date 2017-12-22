@@ -132,7 +132,6 @@ func createSampleFiles(p problem.Problem, sampleCases []problem.TestCase) error 
 	if err := os.MkdirAll(sampleDir, 0766); err != nil {
 		return fmt.Errorf("Can not create directory: %v", err)
 	}
-	fmt.Printf("Create directory %v\n", sampleDir)
 	n := len(sampleCases)
 	for i := 0; i < n; i++ {
 		input := sampleCases[i].Input

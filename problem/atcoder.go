@@ -62,26 +62,27 @@ func (c *AtCoder) GetMemoryLimit() (string, error) {
 
 func (c *AtCoder) GetSampleTestCase() ([]TestCase, error) {
 	doc := c.Doc
-	input := []string{}
-	output := []string{}
+	inputs := []string{}
+	outputs := []string{}
 	doc.Find("div#task-statement > span > span > div > section > pre").Each(func(i int, s *goquery.Selection) {
 		// fmt.Println(i)
 		if s.Text() == "" {
 			return
 		}
 		if i%2 == 0 {
-			input = append(input, s.Text())
+			inputs = append(inputs, s.Text())
 		} else {
-			output = append(output, s.Text())
+			outputs = append(outputs, s.Text())
 		}
 	})
-	if len(input) != len(output) || len(input) == 0 {
+	n := len(inputs)
+	if len(inputs) != len(outputs) || len(inputs) == 0 {
 		return nil, fmt.Errorf("Can not get SampleTestCase")
 	}
-	n := len(input)
+
 	testCases := []TestCase{}
 	for i := 0; i < n; i++ {
-		testCases = append(testCases, TestCase{Input: input[i], Output: output[i]})
+		testCases = append(testCases, TestCase{Input: inputs[i], Output: outputs[i]})
 	}
 	return testCases, nil
 }
