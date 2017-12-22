@@ -36,15 +36,18 @@ func (c *Codeforces) GetContestSiteName() string {
 
 func (c *Codeforces) GetContestName() (string, error) {
 	doc := c.Doc
-	name, ok := doc.Find("span > a").First().Attr("title")
-	if !ok {
+	name := doc.Find("div > table.rtable > tbody > tr > th.left > a").First()
+
+	if name.Text() == "" {
 		return "", fmt.Errorf("Can not find Contest Name")
 	}
-	return name, nil
+
+	return name.Text(), nil
 }
 func (c *Codeforces) GetProblemName() (string, error) {
 	doc := c.Doc
 	s := doc.Find("div.problem-statement div.header div.title").First()
+
 	if s.Text() == "" {
 		return "", fmt.Errorf("Can not find Problem Name")
 	}
@@ -64,10 +67,23 @@ func (c *Codeforces) GetSampleOutpus() ([]string, error) {
 }
 
 func (c *Codeforces) GetProblemURLSet() ([]string, error) {
-	return nil, nil
+	doc := c.Doc
+	urlSet := []string{}
+	doc.Find("td.id").Each(func(i int, s *goquery.Selection) {
+		url, ok := s.Find("a").First().Attr("href")
+		if ok {
+			urlSet = append(urlSet, c.URL.Scheme+"://"+c.URL.Host+url)
+		}
+	})
+
+	return urlSet, nil
 }
 func (c *Codeforces) IsContestPage() bool {
-	return false
+	urlSet, err := c.GetProblemURLSet()
+	if err != nil || len(urlSet) == 0 {
+		return false
+	}
+	return true
 }
 
 func (c *Codeforces) IsProblemPage() bool {
