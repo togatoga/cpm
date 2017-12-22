@@ -59,11 +59,9 @@ func (c *AtCoder) GetTimeLimit() (string, error) {
 func (c *AtCoder) GetMemoryLimit() (string, error) {
 	return "", nil
 }
-func (c *AtCoder) GetSampleInputs() ([]string, error) {
-	return []string{}, nil
-}
-func (c *AtCoder) GetSampleOutpus() ([]string, error) {
-	return []string{}, nil
+
+func (c *AtCoder) GetSampleTestCase() ([]TestCase, error) {
+	return nil, nil
 }
 
 func (c *AtCoder) GetProblemURLSet() ([]string, error) {

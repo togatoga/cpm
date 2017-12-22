@@ -59,11 +59,8 @@ func (c *Codeforces) GetTimeLimit() (string, error) {
 func (c *Codeforces) GetMemoryLimit() (string, error) {
 	return "", nil
 }
-func (c *Codeforces) GetSampleInputs() ([]string, error) {
-	return []string{}, nil
-}
-func (c *Codeforces) GetSampleOutpus() ([]string, error) {
-	return []string{}, nil
+func (c *Codeforces) GetSampleTestCase() ([]TestCase, error) {
+	return nil, nil
 }
 
 func (c *Codeforces) GetProblemURLSet() ([]string, error) {

@@ -7,8 +7,7 @@ type Problem interface {
 	GetProblemName() (string, error)
 	GetTimeLimit() (string, error)
 	GetMemoryLimit() (string, error)
-	GetSampleInputs() ([]string, error)
-	GetSampleOutpus() ([]string, error)
+	GetSampleTestCase() ([]TestCase, error)
 	GetProblemURLSet() ([]string, error)
 	IsContestPage() bool
 	IsProblemPage() bool
