@@ -61,6 +61,11 @@ func (c *AtCoder) GetMemoryLimit() (string, error) {
 }
 
 func (c *AtCoder) GetSampleTestCase() ([]TestCase, error) {
+	doc := c.Doc
+	doc.Find("div#task-statement").Each(func(i int, s *goquery.Selection) {
+
+		fmt.Println(s.Find("pre").First().Text())
+	})
 	return nil, nil
 }
 

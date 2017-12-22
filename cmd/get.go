@@ -58,6 +58,11 @@ Currently cpm supports Codeforces, AtCoder.`,
 					fmt.Printf("Error: %v\n", err)
 					continue
 				}
+				testCase, err := p.GetSampleTestCase()
+				if err != nil {
+					continue
+				}
+				fmt.Println(testCase)
 			} else if p.IsContestPage() {
 				urlSet, err := p.GetProblemURLSet()
 				if err != nil {
