@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -58,11 +59,16 @@ Currently cpm supports Codeforces, AtCoder.`,
 					fmt.Printf("Error: %v\n", err)
 					continue
 				}
-				testCase, err := p.GetSampleTestCase()
+				sampleCases, err := p.GetSampleTestCase()
 				if err != nil {
+					fmt.Printf("Error: %v\n", err)
 					continue
 				}
-				fmt.Println(testCase)
+				if err := createSampleFiles(p, sampleCases); err != nil {
+					fmt.Printf("Error: %v\n", err)
+					continue
+				}
+
 			} else if p.IsContestPage() {
 				urlSet, err := p.GetProblemURLSet()
 				if err != nil {
@@ -77,26 +83,32 @@ Currently cpm supports Codeforces, AtCoder.`,
 	},
 }
 
-func createProblemDir(p problem.Problem) error {
+func getProblemDirPath(p problem.Problem) (string, error) {
 	dir, err := homedir.Dir()
 	if err != nil {
-		return err
+		return "", err
 	}
 	contestSiteName := p.GetContestSiteName()
 	contestName, err := p.GetContestName()
 	if err != nil {
-		return err
+		return "", err
 	}
 	contestProblem, err := p.GetProblemName()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	contestSiteName = strings.Replace(contestSiteName, " ", "", -1)
 	contestName = strings.Replace(contestName, " ", "", -1)
 	contestProblem = strings.Replace(contestProblem, " ", "", -1)
-
 	dir = filepath.Join(dir, ".cpm", "src", contestSiteName, contestName, contestProblem)
+	return dir, nil
+}
+func createProblemDir(p problem.Problem) error {
+	dir, err := getProblemDirPath(p)
+	if err != nil {
+		return err
+	}
 	if err := os.MkdirAll(dir, 0766); err != nil {
 		return fmt.Errorf("Can not create directory: %v", err)
 	}
@@ -108,6 +120,36 @@ func createProblemDir(p problem.Problem) error {
 	}
 
 	fmt.Printf("Create directory %v\n", dir)
+	return nil
+}
+
+func createSampleFiles(p problem.Problem, sampleCases []problem.TestCase) error {
+	dir, err := getProblemDirPath(p)
+	if err != nil {
+		return err
+	}
+	sampleDir := filepath.Join(dir, "sample")
+	if err := os.MkdirAll(sampleDir, 0766); err != nil {
+		return fmt.Errorf("Can not create directory: %v", err)
+	}
+	fmt.Printf("Create directory %v\n", sampleDir)
+	n := len(sampleCases)
+	for i := 0; i < n; i++ {
+		input := sampleCases[i].Input
+		output := sampleCases[i].Output
+		fileName := fmt.Sprintf("sample_%02d", i)
+		inFileName := filepath.Join(sampleDir, fileName+"_in.txt")
+		outFileName := filepath.Join(sampleDir, fileName+"_out.txt")
+		if err := ioutil.WriteFile(inFileName, []byte(input), 0644); err != nil {
+			return fmt.Errorf("Can not create file: %v", err)
+		}
+
+		if err := ioutil.WriteFile(outFileName, []byte(output), 0644); err != nil {
+			return fmt.Errorf("Can not create file: %v", err)
+		}
+
+	}
+	fmt.Println("Create sample input/output files")
 	return nil
 }
 

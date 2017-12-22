@@ -62,11 +62,28 @@ func (c *AtCoder) GetMemoryLimit() (string, error) {
 
 func (c *AtCoder) GetSampleTestCase() ([]TestCase, error) {
 	doc := c.Doc
-	doc.Find("div#task-statement").Each(func(i int, s *goquery.Selection) {
-
-		fmt.Println(s.Find("pre").First().Text())
+	input := []string{}
+	output := []string{}
+	doc.Find("div#task-statement > span > span > div > section > pre").Each(func(i int, s *goquery.Selection) {
+		// fmt.Println(i)
+		if s.Text() == "" {
+			return
+		}
+		if i%2 == 0 {
+			input = append(input, s.Text())
+		} else {
+			output = append(output, s.Text())
+		}
 	})
-	return nil, nil
+	if len(input) != len(output) || len(input) == 0 {
+		return nil, fmt.Errorf("Can not get SampleTestCase")
+	}
+	n := len(input)
+	testCases := []TestCase{}
+	for i := 0; i < n; i++ {
+		testCases = append(testCases, TestCase{Input: input[i], Output: output[i]})
+	}
+	return testCases, nil
 }
 
 func (c *AtCoder) GetProblemURLSet() ([]string, error) {
