@@ -17,6 +17,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -55,7 +56,7 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.cpm.yaml)")
+	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/cpm/config.json)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -76,8 +77,8 @@ func initConfig() {
 		}
 
 		// Search config in home directory with name ".cpm" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".cpm")
+		viper.AddConfigPath(filepath.Join(home, ".config", "cpm"))
+		viper.SetConfigName("config")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
