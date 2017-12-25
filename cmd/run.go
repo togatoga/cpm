@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/togatoga/cpm/problem"
 )
 
 // runCmd represents the run command
@@ -31,8 +32,30 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("run called")
+		execCmd := args[0]
+		samples, err := getSampleTestCases()
+		if err != nil {
+			fmt.Printf("Error: %v", err)
+			return
+		}
+		sampleResults := []string{}
+		for _, sample := range samples {
+			output, err := execTestCase(execCmd, sample)
+			if err != nil {
+				fmt.Printf("Error: %v", err)
+				return
+			}
+			sampleResults = append(sampleResults, output)
+		}
 	},
+}
+
+func getSampleTestCases() ([]problem.TestCase, error) {
+	return nil, nil
+}
+
+func execTestCase(execCmd string, testCase problem.TestCase) (string, error) {
+	return "", nil
 }
 
 func init() {
