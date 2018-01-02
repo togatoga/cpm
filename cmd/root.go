@@ -61,6 +61,12 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	home, err := homedir.Dir()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	viper.SetDefault("root", filepath.Join(home, ".cpm"))
 }
 
 // initConfig reads in config file and ENV variables if set.
