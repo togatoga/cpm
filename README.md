@@ -14,7 +14,7 @@ go get -u github.com/togatoga/cpm
 ## Get problem
 cpm get http://codeforces.com/contest/417/problem/A
 
-## Get all problems
+## Get all problems of the contest
 cpm get http://codeforces.com/contest/908
 ```
 
