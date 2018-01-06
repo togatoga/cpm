@@ -38,6 +38,6 @@ If you combine [cpm](https://github.com/togatoga/cpm) and interactive search([pe
 cd $(cpm list | peco)
 ```
 
-# Support Site
+# Support Sites
 - [Codeforces](http://codeforces.com)
 - [AtCoder(beta only)](https://beta.atcoder.jp)
