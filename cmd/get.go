@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"container/list"
 	"fmt"
 	"io/ioutil"
 	"net/url"
@@ -34,53 +35,58 @@ var getCmd = &cobra.Command{
 	Long: `Get problem information by URL.
 Create structural problem directory under cpm root
 Currently cpm supports Codeforces, AtCoder.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		values := map[string]bool{}
-		for i := 0; i < len(args); i++ {
-			arg := args[i]
+	Run: get,
+}
 
-			if _, ok := values[arg]; ok {
+func get(cmd *cobra.Command, args []string) {
+	if len(args) == 0 {
+		return
+	}
+	que := list.New()
+	values := map[string]bool{}
+	que.PushBack(args[0])
+	for que.Len() > 0 {
+		v := que.Remove(que.Front()).(string)
+		if _, ok := values[v]; ok {
+			continue
+		}
+		values[v] = true
+		url, err := url.Parse(v)
+		if err != nil {
+			fmt.Printf("Error: %v\n", err)
+			continue
+		}
+		p, err := getProblem(url)
+		if err != nil {
+			fmt.Printf("Error: %v\n", err)
+			continue
+		}
+		if p.IsProblemPage() {
+			if err := createProblemDir(p); err != nil {
+				fmt.Printf("Error: %v\n", err)
 				continue
 			}
-			values[arg] = true
-
-			url, err := url.Parse(arg)
+			sampleCases, err := p.GetSampleTestCase()
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 				continue
 			}
-			p, err := getProblem(url)
+			if err := createSampleFiles(p, sampleCases); err != nil {
+				fmt.Printf("Error: %v\n", err)
+				continue
+			}
+
+		} else if p.IsContestPage() {
+			urlSet, err := p.GetProblemURLSet()
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 				continue
 			}
-			if p.IsProblemPage() {
-				if err := createProblemDir(p); err != nil {
-					fmt.Printf("Error: %v\n", err)
-					continue
-				}
-				sampleCases, err := p.GetSampleTestCase()
-				if err != nil {
-					fmt.Printf("Error: %v\n", err)
-					continue
-				}
-				if err := createSampleFiles(p, sampleCases); err != nil {
-					fmt.Printf("Error: %v\n", err)
-					continue
-				}
-
-			} else if p.IsContestPage() {
-				urlSet, err := p.GetProblemURLSet()
-				if err != nil {
-					fmt.Printf("Error: %v\n", err)
-					continue
-				}
-				for _, url := range urlSet {
-					args = append(args, url)
-				}
+			for _, url := range urlSet {
+				que.PushBack(url)
 			}
 		}
-	},
+	}
 }
 
 func getProblemDirPath(p problem.Problem) (string, error) {
