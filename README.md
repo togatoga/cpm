@@ -26,6 +26,11 @@ cpm list
 
 # Config
 Config file is `~/.config/cpm/config.json`
+```json
+{
+   "root": "~/.cpm"
+}
+```
 
 # Advanced
 If you combine [cpm](https://github.com/togatoga/cpm) and interactive search([peco](https://github.com/peco/peco),[fzf](https://github.com/junegunn/fzf)), it's very helpful.
