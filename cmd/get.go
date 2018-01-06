@@ -23,7 +23,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mitchellh/go-homedir"
+	"github.com/spf13/viper"
+
 	"github.com/spf13/cobra"
 	"github.com/togatoga/cpm/problem"
 )
@@ -90,10 +91,7 @@ func get(cmd *cobra.Command, args []string) {
 }
 
 func getProblemDirPath(p problem.Problem) (string, error) {
-	dir, err := homedir.Dir()
-	if err != nil {
-		return "", err
-	}
+
 	contestSiteName := p.GetContestSiteName()
 	contestName, err := p.GetContestName()
 	if err != nil {
@@ -103,11 +101,12 @@ func getProblemDirPath(p problem.Problem) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
+	root := viper.Get("root").(string)
 	contestSiteName = strings.Replace(contestSiteName, " ", "", -1)
 	contestName = strings.Replace(contestName, " ", "", -1)
 	contestProblem = strings.Replace(contestProblem, " ", "", -1)
-	dir = filepath.Join(dir, ".cpm", "src", contestSiteName, contestName, contestProblem)
+
+	dir := filepath.Join(root, "src", contestSiteName, contestName, contestProblem)
 	return dir, nil
 }
 func createProblemDir(p problem.Problem) error {

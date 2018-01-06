@@ -19,7 +19,8 @@ import (
 	"os"
 	"path/filepath"
 
-	homedir "github.com/mitchellh/go-homedir"
+	"github.com/spf13/viper"
+
 	"github.com/spf13/cobra"
 )
 
@@ -45,14 +46,11 @@ to quickly create a Cobra application.`,
 }
 
 func getProblemDirs() ([]string, error) {
-	dir, err := homedir.Dir()
-	if err != nil {
-		return nil, err
-	}
-	baseDir := filepath.Join(dir, ".cpm", "src")
+	root := viper.Get("root").(string)
+	baseDir := filepath.Join(root, "src")
 
 	var problemDirs []string
-	err = filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
