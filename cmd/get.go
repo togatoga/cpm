@@ -106,7 +106,7 @@ func getProblemDirPath(p problem.Problem) (string, error) {
 	contestName = strings.Replace(contestName, " ", "", -1)
 	contestProblem = strings.Replace(contestProblem, " ", "", -1)
 
-	dir := filepath.Join(root, "src", contestSiteName, contestName, contestProblem)
+	dir := filepath.Join(root, contestSiteName, contestName, contestProblem)
 	return dir, nil
 }
 func createProblemDir(p problem.Problem) error {

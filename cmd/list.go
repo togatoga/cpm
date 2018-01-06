@@ -47,10 +47,8 @@ to quickly create a Cobra application.`,
 
 func getProblemDirs() ([]string, error) {
 	root := viper.Get("root").(string)
-	baseDir := filepath.Join(root, "src")
-
 	var problemDirs []string
-	err := filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
