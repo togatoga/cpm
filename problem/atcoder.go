@@ -2,7 +2,10 @@ package problem
 
 import (
 	"fmt"
+	"net/http"
+	"net/http/cookiejar"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -29,11 +32,32 @@ func (c *AtCoder) GetContestSiteName() string {
 }
 
 func (c *AtCoder) newDocument() error {
-	doc, err := goquery.NewDocument(c.URL.String())
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		return err
+	}
+	var cookies []*http.Cookie
+	cookie := &http.Cookie{
+		Name:  "REVEL_SESSION",
+		Value: os.Getenv("ATCODER_SESSION"),
+	}
+	cookies = append(cookies, cookie)
+	jar.SetCookies(c.URL, cookies)
+
+	client := &http.Client{
+		Jar: jar,
+	}
+	resp, err := client.Get(c.URL.String())
+	if err != nil {
+		return err
+	}
+
+	doc, err := goquery.NewDocumentFromResponse(resp)
 	if err != nil {
 		return err
 	}
 	c.Doc = doc
+
 	return nil
 }
 func (c *AtCoder) GetContestName() (string, error) {
