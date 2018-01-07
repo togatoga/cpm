@@ -5,3 +5,9 @@ type TestCase struct {
 	Input  string
 	Output string
 }
+
+type TestFile struct {
+	Name       string
+	InputFile  string
+	OutputFile string
+}

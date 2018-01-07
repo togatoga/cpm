@@ -16,6 +16,10 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/togatoga/cpm/problem"
@@ -31,35 +35,78 @@ and usage of using your command. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		execCmd := args[0]
-		samples, err := getTestCases()
-		if err != nil {
-			fmt.Printf("Error: %v", err)
-			return
-		}
-		sampleResults := []string{}
-		for _, sample := range samples {
-			output, err := execTestCase(execCmd, sample)
-			if err != nil {
-				fmt.Printf("Error: %v", err)
-				return
-			}
-			sampleResults = append(sampleResults, output)
-		}
-	},
+	Run: run,
 }
 
 func run(cmd *cobra.Command, args []string) {
-
+	if len(args) == 0 {
+		return
+	}
+	execCmd := strings.Join(args, " ")
+	testFiles, err := getTestFiles()
+	if err != nil {
+		fmt.Printf("Error %v:\n", err)
+		return
+	}
+	for _, testFile := range testFiles {
+		output, err := execTest(execCmd, testFile)
+		if err != nil {
+			fmt.Printf("Error: %v:\n", err)
+		}
+		fmt.Println(output)
+	}
 }
 
-func getTestCases() ([]problem.TestCase, error) {
-	return nil, nil
+func getTestFiles() ([]problem.TestFile, error) {
+	dir, err := os.Getwd()
+
+	if err != nil {
+		return nil, err
+	}
+	inputFiles := map[string]string{}
+	outputFiles := map[string]string{}
+
+	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() {
+			fileName := info.Name()
+			p := filepath.Dir(path)
+			//input
+			if strings.HasSuffix(fileName, "_in.txt") == true {
+				name := strings.TrimRight(fileName, "_in.txt")
+				inputFiles[name] = filepath.Join(p, fileName)
+			} else if strings.HasSuffix(fileName, "_out.txt") == true {
+				name := strings.TrimRight(fileName, "_out.txt")
+				outputFiles[name] = filepath.Join(p, fileName)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("Fail to walk dir: %v", err)
+	}
+	var testFiles []problem.TestFile
+	for name, inputFile := range inputFiles {
+		outputFile, ok := outputFiles[name]
+		fmt.Println(name)
+		if !ok {
+			continue
+		}
+		testFiles = append(testFiles, problem.TestFile{Name: name, InputFile: inputFile, OutputFile: outputFile})
+	}
+	return testFiles, nil
 }
 
-func execTestCase(execCmd string, testCase problem.TestCase) (string, error) {
-	return "", nil
+func execTest(execCmd string, testCase problem.TestFile) (string, error) {
+	out, err := exec.Command(execCmd, "<", testCase.InputFile).Output()
+	fmt.Println(execCmd, testCase.InputFile)
+	if err != nil {
+		return "", err
+	}
+	return string(out), nil
 }
 
 func init() {
