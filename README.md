@@ -4,7 +4,7 @@ cpm is a management of competitive programming problem.
 # Install
 
 ```bash
-go get -u github.com/togatoga/cpm
+go get github.com/togatoga/cpm
 ```
 
 # Examples
