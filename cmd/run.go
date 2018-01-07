@@ -33,7 +33,7 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		execCmd := args[0]
-		samples, err := getSampleTestCases()
+		samples, err := getTestCases()
 		if err != nil {
 			fmt.Printf("Error: %v", err)
 			return
@@ -50,7 +50,11 @@ to quickly create a Cobra application.`,
 	},
 }
 
-func getSampleTestCases() ([]problem.TestCase, error) {
+func run(cmd *cobra.Command, args []string) {
+
+}
+
+func getTestCases() ([]problem.TestCase, error) {
 	return nil, nil
 }
 
