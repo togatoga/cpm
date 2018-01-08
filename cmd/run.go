@@ -85,8 +85,8 @@ func showResult(execOutput string, testFile problem.TestFile) (bool, error) {
 		return true, nil
 	}
 	color.Yellow("[Wrong Answer]\n")
-	fmt.Println("The output is", execOutput)
-	fmt.Println("The judge output is", output)
+	fmt.Printf("The output is\n%s\n", execOutput)
+	fmt.Printf("The judge output is\n%s\n", output)
 	return false, nil
 }
 
