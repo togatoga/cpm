@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/fatih/color"
 
@@ -51,13 +52,15 @@ func run(cmd *cobra.Command, args []string) {
 	testNum := 0
 	fmt.Println("RUNNING TEST CASES...")
 	for _, testFile := range testFiles {
-		output, err := execTest(execCmd, testFile)
+		result, err := execTest(execCmd, testFile)
 		if err != nil {
 			fmt.Printf("Error: %v:\n", err)
+			continue
 		}
-		ac, err := showResult(output, testFile)
+		ac, err := showResult(result, testFile)
 		if err != nil {
 			fmt.Printf("Error %v:\n", err)
+			continue
 		}
 		testNum++
 		if ac {
@@ -69,7 +72,7 @@ func run(cmd *cobra.Command, args []string) {
 	fmt.Printf("The test result is %d / %d\n", acNum, testNum)
 }
 
-func showResult(execOutput string, testFile problem.TestFile) (bool, error) {
+func showResult(result *problem.Result, testFile problem.TestFile) (bool, error) {
 	fmt.Println("-----------------------------------------")
 	fmt.Printf("Name: %s\n", testFile.Name)
 	fmt.Printf("Input: %s\n", filepath.Base(testFile.InputFile))
@@ -80,12 +83,13 @@ func showResult(execOutput string, testFile problem.TestFile) (bool, error) {
 		return false, err
 	}
 	output := string(data)
-	if execOutput == output {
+	fmt.Printf("[TIME] %v\n", result.Time)
+	if result.Output == output {
 		color.Green("[OK]\n")
 		return true, nil
 	}
 	color.Yellow("[Wrong Answer]\n")
-	fmt.Printf("The output is\n%s\n", execOutput)
+	fmt.Printf("The output is\n%s\n", result.Output)
 	fmt.Printf("The judge output is\n%s\n", output)
 	return false, nil
 }
@@ -141,16 +145,18 @@ func getTestFiles() ([]problem.TestFile, error) {
 	return testFiles, nil
 }
 
-func execTest(execCmd string, testCase problem.TestFile) (string, error) {
-
+func execTest(execCmd string, testCase problem.TestFile) (*problem.Result, error) {
+	start := time.Now()
 	out, err := pipline.Output(
 		[]string{"cat", testCase.InputFile},
 		[]string{"sh", "-c", execCmd},
 	)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(out), nil
+	elasped := time.Since(start)
+
+	return &problem.Result{Output: string(out), Time: elasped}, nil
 }
 
 func init() {
