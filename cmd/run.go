@@ -19,6 +19,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/fatih/color"
@@ -133,6 +134,15 @@ func getTestFiles() ([]problem.TestFile, error) {
 		}
 		testFiles = append(testFiles, problem.TestFile{Name: name, InputFile: inputFile, OutputFile: outputFile})
 	}
+	sort.Slice(testFiles, func(i, j int) bool {
+		if strings.HasSuffix(testFiles[i].Name, "sample") && !strings.HasSuffix(testFiles[j].Name, "sample") {
+			return true
+		}
+		if !strings.HasSuffix(testFiles[i].Name, "sample") && strings.HasSuffix(testFiles[j].Name, "sample") {
+			return false
+		}
+		return testFiles[i].Name < testFiles[j].Name
+	})
 	return testFiles, nil
 }
 
