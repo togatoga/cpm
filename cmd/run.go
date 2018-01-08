@@ -16,11 +16,14 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
+	"github.com/k0kubun/pp"
+
+	pipline "github.com/mattn/go-pipeline"
 	"github.com/spf13/cobra"
 	"github.com/togatoga/cpm/problem"
 )
@@ -48,13 +51,46 @@ func run(cmd *cobra.Command, args []string) {
 		fmt.Printf("Error %v:\n", err)
 		return
 	}
+	acNum := 0
+	testNum := 0
+
 	for _, testFile := range testFiles {
 		output, err := execTest(execCmd, testFile)
 		if err != nil {
 			fmt.Printf("Error: %v:\n", err)
 		}
-		fmt.Println(output)
+		ac, err := showResult(output, testFile)
+		if err != nil {
+			fmt.Printf("Error %v:\n", err)
+		}
+		testNum++
+		if ac {
+			acNum++
+		}
+
 	}
+	fmt.Printf("The test result is %d/%d\n", acNum, testNum)
+}
+
+func showResult(execOutput string, testFile problem.TestFile) (bool, error) {
+	fmt.Println("-----------------------------------------")
+	fmt.Printf("Name: %s\n", testFile.Name)
+	fmt.Printf("Input: %s\n", filepath.Base(testFile.InputFile))
+	fmt.Printf("Output: %s\n", filepath.Base(testFile.OutputFile))
+
+	data, err := ioutil.ReadFile(testFile.OutputFile)
+	if err != nil {
+		return false, err
+	}
+	output := string(data)
+	if execOutput == output {
+		pp.Println("OK")
+		return true, nil
+	}
+	fmt.Println("WA")
+	fmt.Println("The output is", execOutput)
+	fmt.Println("The judge output is", output)
+	return false, nil
 }
 
 func getTestFiles() ([]problem.TestFile, error) {
@@ -91,7 +127,6 @@ func getTestFiles() ([]problem.TestFile, error) {
 	var testFiles []problem.TestFile
 	for name, inputFile := range inputFiles {
 		outputFile, ok := outputFiles[name]
-		fmt.Println(name)
 		if !ok {
 			continue
 		}
@@ -101,8 +136,11 @@ func getTestFiles() ([]problem.TestFile, error) {
 }
 
 func execTest(execCmd string, testCase problem.TestFile) (string, error) {
-	out, err := exec.Command(execCmd, "<", testCase.InputFile).Output()
-	fmt.Println(execCmd, testCase.InputFile)
+	out, err := pipline.Output(
+		[]string{"cat", testCase.InputFile},
+		[]string{execCmd},
+	)
+	// fmt.Println(execCmd, testCase.InputFile)
 	if err != nil {
 		return "", err
 	}
