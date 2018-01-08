@@ -12,10 +12,17 @@ go get github.com/togatoga/cpm
 `cpm get` creates directory under `root` and downloads sample cases.
 ```bash
 ## Get problem
+# Codeforces
 cpm get http://codeforces.com/contest/417/problem/A
+# AtCoder
+cpm get https://beta.atcoder.jp/contests/abc085/tasks/abc085_d
 
 ## Get all problems of the contest
+# Codeforces
 cpm get http://codeforces.com/contest/908
+# AtCoder
+cpm get https://beta.atcoder.jp/contests/abc085/tasks
+
 ```
 
 ### Run Test
