@@ -53,7 +53,7 @@ func run(cmd *cobra.Command, args []string) {
 	}
 	acNum := 0
 	testNum := 0
-
+	fmt.Println("RUNNING TEST CASES...")
 	for _, testFile := range testFiles {
 		output, err := execTest(execCmd, testFile)
 		if err != nil {
