@@ -85,10 +85,10 @@ func showResult(execOutput string, testFile problem.TestFile) (bool, error) {
 	}
 	output := string(data)
 	if execOutput == output {
-		color.Green("[OK] The Status is OK\n")
+		color.Green("[OK]\n")
 		return true, nil
 	}
-	color.Yellow("[WA] The Status is WA\n")
+	color.Yellow("[Wrong Answer]\n")
 	fmt.Println("The output is", execOutput)
 	fmt.Println("The judge output is", output)
 	return false, nil
