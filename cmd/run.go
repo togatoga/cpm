@@ -21,7 +21,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/k0kubun/pp"
+	"github.com/fatih/color"
 
 	pipline "github.com/mattn/go-pipeline"
 	"github.com/spf13/cobra"
@@ -69,7 +69,8 @@ func run(cmd *cobra.Command, args []string) {
 		}
 
 	}
-	fmt.Printf("The test result is %d/%d\n", acNum, testNum)
+	fmt.Println("----------------------THE TEST RESULT----------------------")
+	fmt.Printf("The test result is %d / %d\n", acNum, testNum)
 }
 
 func showResult(execOutput string, testFile problem.TestFile) (bool, error) {
@@ -84,10 +85,10 @@ func showResult(execOutput string, testFile problem.TestFile) (bool, error) {
 	}
 	output := string(data)
 	if execOutput == output {
-		pp.Println("OK")
+		color.Green("[OK] The Status is OK\n")
 		return true, nil
 	}
-	fmt.Println("WA")
+	color.Yellow("[WA] The Status is WA\n")
 	fmt.Println("The output is", execOutput)
 	fmt.Println("The judge output is", output)
 	return false, nil
@@ -136,11 +137,11 @@ func getTestFiles() ([]problem.TestFile, error) {
 }
 
 func execTest(execCmd string, testCase problem.TestFile) (string, error) {
+
 	out, err := pipline.Output(
 		[]string{"cat", testCase.InputFile},
-		[]string{execCmd},
+		[]string{"sh", "-c", execCmd},
 	)
-	// fmt.Println(execCmd, testCase.InputFile)
 	if err != nil {
 		return "", err
 	}
