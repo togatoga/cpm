@@ -90,6 +90,12 @@ func get(cmd *cobra.Command, args []string) {
 	}
 }
 
+func sanitize(s string) string {
+	s = strings.Replace(s, " ", "", -1)
+	s = strings.Replace(s, "/", "\\", -1)
+	return s
+}
+
 func getProblemDirPath(p problem.Problem) (string, error) {
 
 	contestSiteName := p.GetContestSiteName()
@@ -102,11 +108,13 @@ func getProblemDirPath(p problem.Problem) (string, error) {
 		return "", err
 	}
 	root := viper.Get("root").(string)
-	contestSiteName = strings.Replace(contestSiteName, " ", "", -1)
-	contestName = strings.Replace(contestName, " ", "", -1)
-	contestProblem = strings.Replace(contestProblem, " ", "", -1)
 
+	contestSiteName = sanitize(contestSiteName)
+	contestName = sanitize(contestName)
+	contestProblem = sanitize(contestProblem)
+	fmt.Println(contestSiteName, contestName, contestProblem)
 	dir := filepath.Join(root, contestSiteName, contestName, contestProblem)
+
 	return dir, nil
 }
 func createProblemDir(p problem.Problem) error {
