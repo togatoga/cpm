@@ -88,8 +88,7 @@ func (c *AtCoder) GetSampleTestCase() ([]TestCase, error) {
 	doc := c.Doc
 	inputs := []string{}
 	outputs := []string{}
-	doc.Find("div#task-statement > span > span > div > section > pre").Each(func(i int, s *goquery.Selection) {
-		// fmt.Println(i)
+	doc.Find("div#task-statement > span.lang > span.lang-ja > div.part > section > pre").Each(func(i int, s *goquery.Selection) {
 		if s.Text() == "" {
 			return
 		}
