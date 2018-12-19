@@ -174,7 +174,7 @@ func getProblem(url *url.URL) (problem.Problem, error) {
 			return nil, err
 		}
 		return p, nil
-	case "beta.atcoder.jp":
+	case "atcoder.jp":
 		p, err := problem.NewAtCoder(url)
 		if err != nil {
 			return nil, err
