@@ -52,7 +52,7 @@ func getProblemDirs() ([]string, error) {
 		if err != nil {
 			return err
 		}
-		if !info.IsDir() && info.Name() == ".problem" {
+		if !info.IsDir() && (info.Name() == ".problem" || info.Name() == ".problem.json") {
 			p := filepath.Dir(path)
 			problemDirs = append(problemDirs, p)
 		}
