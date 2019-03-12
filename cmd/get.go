@@ -89,6 +89,11 @@ func get(cmd *cobra.Command, args []string) {
 		}
 	}
 }
+func sanitizeProblem(s string) string {
+	//for Rust
+	s = strings.Replace(s, ".", "_", -1)
+	return s
+}
 
 func sanitize(s string) string {
 	s = strings.Replace(s, " ", "", -1)
@@ -111,7 +116,7 @@ func getProblemDirPath(p problem.Problem) (string, error) {
 
 	contestSiteName = sanitize(contestSiteName)
 	contestName = sanitize(contestName)
-	contestProblem = sanitize(contestProblem)
+	contestProblem = sanitizeProblem(sanitize(contestProblem))
 	fmt.Println(contestSiteName, contestName, contestProblem)
 	dir := filepath.Join(root, contestSiteName, contestName, contestProblem)
 
@@ -174,7 +179,7 @@ func getProblem(url *url.URL) (problem.Problem, error) {
 			return nil, err
 		}
 		return p, nil
-	case "beta.atcoder.jp":
+	case "atcoder.jp":
 		p, err := problem.NewAtCoder(url)
 		if err != nil {
 			return nil, err
