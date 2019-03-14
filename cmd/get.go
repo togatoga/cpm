@@ -92,6 +92,7 @@ func get(cmd *cobra.Command, args []string) {
 func sanitizeProblem(s string) string {
 	//for Rust
 	s = strings.Replace(s, ".", "_", -1)
+	s = strings.Replace(s, "*", "", -1)
 	return s
 }
 
