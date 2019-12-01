@@ -9,6 +9,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.2
 	github.com/hashicorp/hcl v0.0.0-20171017181929-23c074d0eceb
 	github.com/inconshreveable/mousetrap v1.0.0
+	github.com/k0kubun/pp v3.0.1+incompatible
 	github.com/magiconair/properties v1.7.4
 	github.com/mattn/go-colorable v0.0.9
 	github.com/mattn/go-isatty v0.0.3
