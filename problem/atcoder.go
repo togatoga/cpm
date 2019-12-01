@@ -50,9 +50,10 @@ func (c *AtCoder) Login() error {
 	if err != nil {
 		return err
 	}
-	err = c.ParseResponse()
-	if err != nil {
-		return err
+
+	//If you succeeded in login AtCoder, Atcoder redirects to top page
+	if c.Resp.Request.URL.String() != "https://atcoder.jp/" {
+		logrus.Fatal("Username or Password is wrong")
 	}
 	logrus.Info("Success!!")
 	return nil
