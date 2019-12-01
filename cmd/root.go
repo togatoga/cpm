@@ -32,7 +32,7 @@ var debug bool
 var RootCmd = &cobra.Command{
 	Use:   "cpm",
 	Short: "the management of the competitive programming problem",
-	Long: "the management of the competitive programming problem",
+	Long:  "the management of the competitive programming problem",
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	//	Run: func(cmd *cobra.Command, args []string) { },
