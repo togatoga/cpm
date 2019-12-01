@@ -16,10 +16,34 @@ limitations under the License.
 package cmd
 
 import (
+	"bufio"
 	"fmt"
+	"net/http/cookiejar"
+	"net/url"
+	"os"
+	"strings"
+	"syscall"
+
+	"github.com/k0kubun/pp"
+	"github.com/togatoga/cpm/problem"
+	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/spf13/cobra"
 )
+
+func credentials() (string, string) {
+	reader := bufio.NewReader(os.Stdin)
+
+	fmt.Print("Enter Username: ")
+	username, _ := reader.ReadString('\n')
+
+	fmt.Print("Enter Password: ")
+	bytePassword, _ := terminal.ReadPassword(int(syscall.Stdin))
+
+	password := string(bytePassword)
+
+	return strings.TrimSpace(username), strings.TrimSpace(password)
+}
 
 // loginCmd represents the login command
 var loginCmd = &cobra.Command{
@@ -32,7 +56,42 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("login called")
+		u, err := url.Parse("https://atcoder.jp/login")
+		if err != nil {
+			fmt.Printf("%s: %s", err, u)
+		}
+		username, password := credentials()
+
+		c := problem.NewAtCoder(u)
+		err = c.MakeGetRequest()
+		if err != nil {
+			fmt.Printf("%s", err)
+		}
+		c.ParseResponse()
+		token, _ := c.Doc.Find("input[name='csrf_token']").Attr("value")
+
+		values := url.Values{
+			"username":   {username},
+			"password":   {password},
+			"csrf_token": {token},
+		}
+		jar, err := cookiejar.New(nil)
+		if err != nil {
+			fmt.Printf("%s", err)
+		}
+		jar.SetCookies(u, c.Resp.Cookies())
+		err = c.MakePostFormRequest(values, jar)
+		if err != nil {
+			fmt.Printf("%s", err)
+		}
+		err = c.ParseResponse()
+		if err != nil {
+			fmt.Printf("%s", err)
+		}
+
+		html, _ := c.Doc.Html()
+
+		pp.Println(html)
 	},
 }
 

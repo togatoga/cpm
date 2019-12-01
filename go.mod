@@ -23,8 +23,9 @@ require (
 	github.com/spf13/jwalterweatherman v0.0.0-20180109140146-7c0cea34c8ec
 	github.com/spf13/pflag v1.0.0
 	github.com/spf13/viper v1.0.0
-	golang.org/x/net v0.0.0-20180108090419-434ec0c7fe37
-	golang.org/x/sys v0.0.0-20180109180726-b9cf5f96b68d
+	golang.org/x/crypto v0.0.0-20191128160524-b544559bb6d1
+	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3
+	golang.org/x/sys v0.0.0-20190412213103-97732733099d
 	golang.org/x/text v0.3.1-0.20171227012246-e19ae1496984
 	gopkg.in/yaml.v2 v2.0.0
 )

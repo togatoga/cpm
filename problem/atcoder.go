@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/k0kubun/pp"
+
 	"github.com/PuerkitoBio/goquery"
 )
 
@@ -47,9 +49,24 @@ func (c *AtCoder) MakeGetRequest() error {
 	return nil
 }
 
+func (c *AtCoder) MakePostFormRequest(values url.Values, jar *cookiejar.Jar) error {
+	client := &http.Client{
+		Jar: jar,
+	}
+	resp, err := client.PostForm(c.URL.String(), values)
+	if err != nil {
+		return err
+	}
+	for _, x := range resp.Cookies() {
+		pp.Println(x)
+	}
+	c.Resp = resp
+	return nil
+}
+
 func (c *AtCoder) ParseResponse() error {
 	if c.Resp == nil {
-		return fmt.Errorf("No Response")
+		return fmt.Errorf("No Response. Please call request functions")
 	}
 	doc, err := goquery.NewDocumentFromResponse(c.Resp)
 	if err != nil {
