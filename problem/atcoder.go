@@ -8,6 +8,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/k0kubun/pp"
+
 	"github.com/PuerkitoBio/goquery"
 )
 
@@ -31,6 +33,15 @@ func (c *AtCoder) GetContestSiteName() string {
 	return url.Host
 }
 
+func (c *AtCoder) Login() error {
+
+	return nil
+}
+
+func (c *AtCoder) isLoggedIn() bool {
+	return false
+}
+
 func (c *AtCoder) newDocument() error {
 	jar, err := cookiejar.New(nil)
 	if err != nil {
@@ -51,6 +62,7 @@ func (c *AtCoder) newDocument() error {
 	if err != nil {
 		return err
 	}
+	pp.Println(resp)
 
 	doc, err := goquery.NewDocumentFromResponse(resp)
 	if err != nil {
