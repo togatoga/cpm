@@ -13,10 +13,10 @@ import (
 )
 
 type AtCoder struct {
-	URL     *url.URL
-	Doc     *goquery.Document
-	Resp    *http.Response //latest request
-	Cookies []*http.Cookie
+	URL  *url.URL
+	Doc  *goquery.Document
+	Resp *http.Response //latest request
+
 }
 
 func NewAtCoder(URL *url.URL) *AtCoder {
@@ -65,16 +65,7 @@ func (c *AtCoder) GetContestSiteName() string {
 }
 
 func (c *AtCoder) MakeGetRequest() error {
-	jar, err := cookiejar.New(nil)
-	if err != nil {
-		return err
-	}
-	if c.Cookies != nil {
-		jar.SetCookies(c.URL, c.Cookies)
-	}
-	client := &http.Client{
-		Jar: jar,
-	}
+	client := &http.Client{}
 	resp, err := client.Get(c.URL.String())
 	if err != nil {
 		return err

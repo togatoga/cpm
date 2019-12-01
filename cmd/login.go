@@ -16,9 +16,10 @@ limitations under the License.
 package cmd
 
 import (
-	"log"
+	"fmt"
 	"net/url"
 
+	"github.com/sirupsen/logrus"
 	"github.com/togatoga/cpm/problem"
 
 	"github.com/spf13/cobra"
@@ -27,20 +28,26 @@ import (
 // loginCmd represents the login command
 var loginCmd = &cobra.Command{
 	Use:   "login",
-	Short: "Login services and save your cookies in your local",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Login services and save/update your cookies in your local",
+	Long:  `Login services and save/update your cookies in your local`,
 	Run: func(cmd *cobra.Command, args []string) {
 		u, err := url.Parse("https://atcoder.jp/login")
 		if err != nil {
-			log.Fatal(err)
+			logrus.Fatal(err)
+
 		}
 		c := problem.NewAtCoder(u)
-		c.Login()
+		err = c.Login()
+		if err != nil {
+			logrus.Fatal(err)
+		}
+		err = c.ParseResponse()
+		if err != nil {
+			logrus.Fatal(err)
+		}
+		for _, cookie := range c.Resp.Cookies() {
+			fmt.Println(cookie)
+		}
 	},
 }
 
