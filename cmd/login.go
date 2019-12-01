@@ -24,7 +24,7 @@ import (
 // loginCmd represents the login command
 var loginCmd = &cobra.Command{
 	Use:   "login",
-	Short: "A brief description of your command",
+	Short: "Login services and save your cookies in your local",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 

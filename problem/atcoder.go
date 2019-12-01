@@ -5,27 +5,22 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"os"
 	"strings"
-
-	"github.com/k0kubun/pp"
 
 	"github.com/PuerkitoBio/goquery"
 )
 
 type AtCoder struct {
-	URL *url.URL
-	Doc *goquery.Document
+	URL     *url.URL
+	Doc     *goquery.Document
+	Resp    *http.Response
+	Cookies []*http.Cookie
 }
 
-func NewAtCoder(URL *url.URL) (*AtCoder, error) {
+func NewAtCoder(URL *url.URL) *AtCoder {
 	c := new(AtCoder)
 	c.URL = URL
-	err := c.newDocument()
-	if err != nil {
-		return nil, err
-	}
-	return c, nil
+	return c
 }
 
 func (c *AtCoder) GetContestSiteName() string {
@@ -33,28 +28,14 @@ func (c *AtCoder) GetContestSiteName() string {
 	return url.Host
 }
 
-func (c *AtCoder) Login() error {
-
-	return nil
-}
-
-func (c *AtCoder) isLoggedIn() bool {
-	return false
-}
-
-func (c *AtCoder) newDocument() error {
+func (c *AtCoder) MakeGetRequest() error {
 	jar, err := cookiejar.New(nil)
 	if err != nil {
 		return err
 	}
-	var cookies []*http.Cookie
-	cookie := &http.Cookie{
-		Name:  "REVEL_SESSION",
-		Value: os.Getenv("ATCODER_SESSION"),
+	if c.Cookies != nil {
+		jar.SetCookies(c.URL, c.Cookies)
 	}
-	cookies = append(cookies, cookie)
-	jar.SetCookies(c.URL, cookies)
-
 	client := &http.Client{
 		Jar: jar,
 	}
@@ -62,9 +43,15 @@ func (c *AtCoder) newDocument() error {
 	if err != nil {
 		return err
 	}
-	pp.Println(resp)
+	c.Resp = resp
+	return nil
+}
 
-	doc, err := goquery.NewDocumentFromResponse(resp)
+func (c *AtCoder) ParseResponse() error {
+	if c.Resp == nil {
+		return fmt.Errorf("No Response")
+	}
+	doc, err := goquery.NewDocumentFromResponse(c.Resp)
 	if err != nil {
 		return err
 	}

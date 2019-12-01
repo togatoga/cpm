@@ -182,7 +182,12 @@ func getProblem(url *url.URL) (problem.Problem, error) {
 		}
 		return p, nil
 	case "atcoder.jp":
-		p, err := problem.NewAtCoder(url)
+		p := problem.NewAtCoder(url)
+		err := p.MakeGetRequest()
+		if err != nil {
+			return nil, err
+		}
+		err = p.ParseResponse()
 		if err != nil {
 			return nil, err
 		}
