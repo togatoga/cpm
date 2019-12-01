@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/k0kubun/pp"
+	"github.com/sirupsen/logrus"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -15,7 +15,7 @@ import (
 type AtCoder struct {
 	URL     *url.URL
 	Doc     *goquery.Document
-	Resp    *http.Response
+	Resp    *http.Response //latest request
 	Cookies []*http.Cookie
 }
 
@@ -23,6 +23,39 @@ func NewAtCoder(URL *url.URL) *AtCoder {
 	c := new(AtCoder)
 	c.URL = URL
 	return c
+}
+
+func (c *AtCoder) Login() error {
+	username, password := InputCredentials()
+	logrus.Info("Trying to login AtCoder...")
+	err := c.MakeGetRequest()
+	if err != nil {
+		return err
+	}
+	c.ParseResponse()
+	token, _ := c.Doc.Find("input[name='csrf_token']").Attr("value")
+
+	values := url.Values{
+		"username":   {username},
+		"password":   {password},
+		"csrf_token": {token},
+	}
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		return err
+	}
+	jar.SetCookies(c.URL, c.Resp.Cookies())
+
+	err = c.MakePostFormRequest(values, jar)
+	if err != nil {
+		return err
+	}
+	err = c.ParseResponse()
+	if err != nil {
+		return err
+	}
+	logrus.Info("Success!!")
+	return nil
 }
 
 func (c *AtCoder) GetContestSiteName() string {
@@ -57,16 +90,13 @@ func (c *AtCoder) MakePostFormRequest(values url.Values, jar *cookiejar.Jar) err
 	if err != nil {
 		return err
 	}
-	for _, x := range resp.Cookies() {
-		pp.Println(x)
-	}
 	c.Resp = resp
 	return nil
 }
 
 func (c *AtCoder) ParseResponse() error {
 	if c.Resp == nil {
-		return fmt.Errorf("No Response. Please call request functions")
+		return fmt.Errorf("No Response. Please call request functions before parsing response")
 	}
 	doc, err := goquery.NewDocumentFromResponse(c.Resp)
 	if err != nil {

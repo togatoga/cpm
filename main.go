@@ -14,7 +14,9 @@
 
 package main
 
-import "github.com/togatoga/cpm/cmd"
+import (
+	"github.com/togatoga/cpm/cmd"
+)
 
 func main() {
 	cmd.Execute()
