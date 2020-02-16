@@ -6,18 +6,22 @@ extern crate reqwest;
 extern crate rpassword;
 extern crate scraper;
 extern crate selectors;
+extern crate serde;
+extern crate serde_json;
 extern crate tokio;
 extern crate url;
 
 use itertools::Itertools;
 use reqwest::header::{HeaderMap, HeaderValue, COOKIE};
 use selectors::Element;
+use serde::{Deserialize, Serialize};
 use std::io::{BufRead, Write};
 
 enum SubCommand {
     Get,
     Download,
     Login,
+    Root,
 }
 impl SubCommand {
     fn value(&self) -> String {
@@ -25,8 +29,14 @@ impl SubCommand {
             SubCommand::Get => "get".to_string(),
             SubCommand::Download => "download".to_string(),
             SubCommand::Login => "login".to_string(),
+            SubCommand::Root => "root".to_string(),
         }
     }
+}
+
+#[derive(Serialize, Deserialize)]
+struct Config {
+    root: String,
 }
 
 struct AtCoder {
@@ -148,13 +158,22 @@ impl AtCoder {
         self.parse_response(resp).await?;
         let parser = AtCoderParser::new(&self.html.as_ref().unwrap());
 
-        let problem_name = parser.problem_name().unwrap();
-        let contest_name = parser.contest_name().unwrap();
+        let mut problem_name = parser.problem_name().unwrap();
+        let mut contest_name = parser.contest_name().unwrap();
+        //Remove extra whitespace
+        problem_name.retain(|x| !x.is_whitespace());
+        contest_name.retain(|x| !x.is_whitespace());
+        println!("{} {}", contest_name, problem_name);
+        let config = AtCoder::load_config()?;
+        let path = std::path::PathBuf::from(config.root)
+            .join("atcoder.jp")
+            .join(contest_name)
+            .join(problem_name);
         let sample_test_cases = parser.sample_cases();
-        println!("{} {}", problem_name, contest_name);
         println!("====== Download Result ======");
+
         if let Some(samples) = sample_test_cases {
-            AtCoder::create_sample_test_files(&samples)?;
+            AtCoder::create_sample_test_files(&samples, path.join("sample").to_str())?;
             for (idx, (input, output)) in samples.iter().enumerate() {
                 println!("=== Sample Test Case {} ===", idx + 1);
                 println!("Input:\n{}\nOutput:\n{}", input, output);
@@ -176,7 +195,7 @@ impl AtCoder {
 
         println!("====== Download Result ======");
         if let Some(samples) = sample_test_cases {
-            AtCoder::create_sample_test_files(&samples)?;
+            AtCoder::create_sample_test_files(&samples, None)?;
             for (idx, (input, output)) in samples.iter().enumerate() {
                 println!("=== Sample Test Case {} ===", idx + 1);
                 println!("Input:\n{}\nOutput:\n{}", input, output);
@@ -246,22 +265,43 @@ impl AtCoder {
     }
 
     //utils
-    fn create_sample_test_files(test_cases: &[(String, String)]) -> Result<(), failure::Error> {
+    fn load_config() -> Result<Config, failure::Error> {
+        let config_file = dirs::config_dir().unwrap().join("cpm").join("config.json");
+        let file = std::fs::File::open(config_file)?;
+        let reader = std::io::BufReader::new(file);
+        let config: Config = serde_json::from_reader(reader)?;
+        Ok(config)
+    }
+    fn create_problem_directory(
+        contest_name: &str,
+        problem_name: &str,
+    ) -> Result<(), failure::Error> {
+        Ok(())
+    }
+    fn create_sample_test_files(
+        test_cases: &[(String, String)],
+        path: Option<&str>,
+    ) -> Result<(), failure::Error> {
+        let root_path = if let Some(p) = path {
+            std::path::PathBuf::from(p)
+        } else {
+            dirs::runtime_dir().unwrap()
+        };
+        std::fs::create_dir_all(root_path.clone())?;
         for (idx, (input, output)) in test_cases.iter().enumerate() {
             //e.g sample_input_1.txt sample_output_1.txt
             let input_file_name = format!("sample_input_{}.txt", idx + 1);
-
             let mut input_file = std::fs::OpenOptions::new()
                 .write(true)
                 .create(true)
-                .open(input_file_name)?;
+                .open(root_path.join(input_file_name))?;
             input_file.write_all(input.as_bytes())?;
 
             let output_file_name = format!("sample_output_{}.txt", idx + 1);
             let mut output_file = std::fs::OpenOptions::new()
                 .write(true)
                 .create(true)
-                .open(output_file_name)?;
+                .open(root_path.join(output_file_name))?;
             output_file.write_all(output.as_bytes())?;
         }
         Ok(())
@@ -352,7 +392,6 @@ Example:
                 .arg(clap::Arg::with_name("url").help("A login URL of AtCoder")),
         )
         .get_matches();
-
     //run sub commands
     let mut atcoder = AtCoder::new();
     if let Some(ref matched) = matches.subcommand_matches(&SubCommand::Get.value()) {
