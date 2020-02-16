@@ -7,3 +7,19 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+scraper = "0.11.0"
+clap = "2.33.0"
+url = "2.1.0"
+failure = "0.1.6"
+tokio = { version = "0.2", features = ["full"] }
+selectors = "0.21.0"
+rpassword = "4.0"
+itertools = "0.8"
+dirs = "2.0"
+cookie = "0.12"
+
+[dependencies.reqwest]
+git = "https://github.com/seanmonstar/reqwest"
+branch = "master"
+features = ["cookies"]
+
