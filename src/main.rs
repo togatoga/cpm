@@ -1,4 +1,5 @@
-use cpm::util;
+mod util;
+
 use itertools::Itertools;
 use reqwest::header::{HeaderMap, HeaderValue, COOKIE};
 use selectors::Element;
