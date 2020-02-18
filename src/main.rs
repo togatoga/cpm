@@ -1,15 +1,4 @@
-extern crate clap;
-extern crate cookie;
-extern crate dirs;
-extern crate failure;
-extern crate reqwest;
-extern crate rpassword;
-extern crate scraper;
-extern crate selectors;
-extern crate serde;
-extern crate serde_json;
-extern crate tokio;
-extern crate url;
+mod util;
 
 use itertools::Itertools;
 use reqwest::header::{HeaderMap, HeaderValue, COOKIE};
@@ -22,6 +11,7 @@ enum SubCommand {
     Download,
     Login,
     Root,
+    List,
 }
 impl SubCommand {
     fn value(&self) -> String {
@@ -30,6 +20,7 @@ impl SubCommand {
             SubCommand::Download => "download".to_string(),
             SubCommand::Login => "login".to_string(),
             SubCommand::Root => "root".to_string(),
+            SubCommand::List => "list".to_string(),
         }
     }
 }
@@ -151,7 +142,7 @@ impl AtCoder {
     }
     pub async fn get(&mut self, url: &str) -> Result<(), failure::Error> {
         let url = url::Url::parse(url)?;
-        if let Ok(cookie_headers) = AtCoder::local_cookie_headers() {
+        if let Ok(cookie_headers) = util::local_cookie_headers() {
             self.cookie_headers = cookie_headers
         }
         let resp = self.call_get_request(url.as_str()).await?;
@@ -173,7 +164,7 @@ impl AtCoder {
         println!("====== Download Result ======");
 
         if let Some(samples) = sample_test_cases {
-            AtCoder::create_sample_test_files(&samples, path.join("sample").to_str())?;
+            util::create_sample_test_files(&samples, path.join("sample").to_str())?;
             for (idx, (input, output)) in samples.iter().enumerate() {
                 println!("=== Sample Test Case {} ===", idx + 1);
                 println!("Input:\n{}\nOutput:\n{}", input, output);
@@ -184,7 +175,7 @@ impl AtCoder {
     }
     pub async fn download(&mut self, url: &str) -> Result<(), failure::Error> {
         let url = url::Url::parse(url)?;
-        if let Ok(cookie_headers) = AtCoder::local_cookie_headers() {
+        if let Ok(cookie_headers) = util::local_cookie_headers() {
             self.cookie_headers = cookie_headers;
         }
         let resp = self.call_get_request(url.as_str()).await?;
@@ -195,7 +186,7 @@ impl AtCoder {
 
         println!("====== Download Result ======");
         if let Some(samples) = sample_test_cases {
-            AtCoder::create_sample_test_files(&samples, None)?;
+            util::create_sample_test_files(&samples, None)?;
             for (idx, (input, output)) in samples.iter().enumerate() {
                 println!("=== Sample Test Case {} ===", idx + 1);
                 println!("Input:\n{}\nOutput:\n{}", input, output);
@@ -211,7 +202,7 @@ impl AtCoder {
         let parser = AtCoderParser::new(self.html.as_ref().unwrap());
         //necessary information and parameters to login AtCoder
         let csrf_token = parser.csrf_token().unwrap();
-        let (username, password) = AtCoder::username_and_password();
+        let (username, password) = util::username_and_password();
         let params = {
             let mut params = std::collections::HashMap::new();
             params.insert("username", username);
@@ -222,7 +213,7 @@ impl AtCoder {
         //make a post request and try to login
         let resp = self.call_post_request(url.as_str(), &params).await?;
         //save your cookie in your local
-        AtCoder::save_cookie_in_local(&resp)?;
+        util::save_cookie_in_local(&resp)?;
         Ok(())
     }
 
@@ -370,7 +361,7 @@ Example:
         )
         .subcommand(
             clap::SubCommand::with_name(&SubCommand::Get.value())
-                .about("Create a new directory from URL")
+                .about("Create a new directory from URL under root path")
                 .arg(
                     clap::Arg::with_name("url")
                         .help("A URL of problem")
@@ -390,6 +381,11 @@ Example:
             clap::SubCommand::with_name(&SubCommand::Login.value())
                 .about("Login AtCoder and save session in your local")
                 .arg(clap::Arg::with_name("url").help("A login URL of AtCoder")),
+        )
+        .subcommand(clap::SubCommand::with_name(&SubCommand::Root.value()).about("Show root path"))
+        .subcommand(
+            clap::SubCommand::with_name(&SubCommand::List.value())
+                .about("List local directories under root path"),
         )
         .get_matches();
     //run sub commands
