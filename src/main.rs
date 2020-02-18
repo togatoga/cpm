@@ -1,15 +1,3 @@
-extern crate clap;
-extern crate cookie;
-extern crate cpm;
-extern crate dirs;
-extern crate failure;
-extern crate reqwest;
-extern crate rpassword;
-extern crate scraper;
-extern crate selectors;
-extern crate tokio;
-extern crate url;
-
 use cpm::util;
 use itertools::Itertools;
 use reqwest::header::{HeaderMap, HeaderValue, COOKIE};
