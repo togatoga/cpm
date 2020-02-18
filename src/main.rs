@@ -1,5 +1,6 @@
 extern crate clap;
 extern crate cookie;
+extern crate cpm;
 extern crate dirs;
 extern crate failure;
 extern crate reqwest;
@@ -9,15 +10,17 @@ extern crate selectors;
 extern crate tokio;
 extern crate url;
 
+use cpm::util;
 use itertools::Itertools;
 use reqwest::header::{HeaderMap, HeaderValue, COOKIE};
 use selectors::Element;
-use std::io::{BufRead, Write};
 
 enum SubCommand {
     Get,
     Download,
     Login,
+    Root,
+    List,
 }
 impl SubCommand {
     fn value(&self) -> String {
@@ -25,6 +28,8 @@ impl SubCommand {
             SubCommand::Get => "get".to_string(),
             SubCommand::Download => "download".to_string(),
             SubCommand::Login => "login".to_string(),
+            SubCommand::Root => "root".to_string(),
+            SubCommand::List => "list".to_string(),
         }
     }
 }
@@ -141,7 +146,7 @@ impl AtCoder {
     }
     pub async fn get(&mut self, url: &str) -> Result<(), failure::Error> {
         let url = url::Url::parse(url)?;
-        if let Ok(cookie_headers) = AtCoder::local_cookie_headers() {
+        if let Ok(cookie_headers) = util::local_cookie_headers() {
             self.cookie_headers = cookie_headers
         }
         let resp = self.call_get_request(url.as_str()).await?;
@@ -151,10 +156,9 @@ impl AtCoder {
         let problem_name = parser.problem_name().unwrap();
         let contest_name = parser.contest_name().unwrap();
         let sample_test_cases = parser.sample_cases();
-        println!("{} {}", problem_name, contest_name);
         println!("====== Download Result ======");
         if let Some(samples) = sample_test_cases {
-            AtCoder::create_sample_test_files(&samples)?;
+            util::create_sample_test_files(&samples)?;
             for (idx, (input, output)) in samples.iter().enumerate() {
                 println!("=== Sample Test Case {} ===", idx + 1);
                 println!("Input:\n{}\nOutput:\n{}", input, output);
@@ -165,7 +169,7 @@ impl AtCoder {
     }
     pub async fn download(&mut self, url: &str) -> Result<(), failure::Error> {
         let url = url::Url::parse(url)?;
-        if let Ok(cookie_headers) = AtCoder::local_cookie_headers() {
+        if let Ok(cookie_headers) = util::local_cookie_headers() {
             self.cookie_headers = cookie_headers;
         }
         let resp = self.call_get_request(url.as_str()).await?;
@@ -176,7 +180,7 @@ impl AtCoder {
 
         println!("====== Download Result ======");
         if let Some(samples) = sample_test_cases {
-            AtCoder::create_sample_test_files(&samples)?;
+            util::create_sample_test_files(&samples)?;
             for (idx, (input, output)) in samples.iter().enumerate() {
                 println!("=== Sample Test Case {} ===", idx + 1);
                 println!("Input:\n{}\nOutput:\n{}", input, output);
@@ -192,7 +196,7 @@ impl AtCoder {
         let parser = AtCoderParser::new(self.html.as_ref().unwrap());
         //necessary information and parameters to login AtCoder
         let csrf_token = parser.csrf_token().unwrap();
-        let (username, password) = AtCoder::username_and_password();
+        let (username, password) = util::username_and_password();
         let params = {
             let mut params = std::collections::HashMap::new();
             params.insert("username", username);
@@ -203,7 +207,7 @@ impl AtCoder {
         //make a post request and try to login
         let resp = self.call_post_request(url.as_str(), &params).await?;
         //save your cookie in your local
-        AtCoder::save_cookie_in_local(&resp)?;
+        util::save_cookie_in_local(&resp)?;
         Ok(())
     }
 
@@ -244,69 +248,6 @@ impl AtCoder {
         self.html = Some(response.text().await?);
         Ok(())
     }
-
-    //utils
-    fn create_sample_test_files(test_cases: &[(String, String)]) -> Result<(), failure::Error> {
-        for (idx, (input, output)) in test_cases.iter().enumerate() {
-            //e.g sample_input_1.txt sample_output_1.txt
-            let input_file_name = format!("sample_input_{}.txt", idx + 1);
-
-            let mut input_file = std::fs::OpenOptions::new()
-                .write(true)
-                .create(true)
-                .open(input_file_name)?;
-            input_file.write_all(input.as_bytes())?;
-
-            let output_file_name = format!("sample_output_{}.txt", idx + 1);
-            let mut output_file = std::fs::OpenOptions::new()
-                .write(true)
-                .create(true)
-                .open(output_file_name)?;
-            output_file.write_all(output.as_bytes())?;
-        }
-        Ok(())
-    }
-    fn save_cookie_in_local(response: &reqwest::Response) -> Result<(), failure::Error> {
-        let cookies_str = response
-            .cookies()
-            .map(|cookie| format!("{}={}", cookie.name(), cookie.value()))
-            .join(";");
-        let path = dirs::home_dir().unwrap().join(".atcoder-sample-downloader");
-        //create $HOME/.atcoder-sample-downloader
-        std::fs::create_dir_all(path.clone())?;
-        //create cookie.jar under this directory
-        let cookie_path = path.join("cookie.jar");
-        std::fs::OpenOptions::new()
-            .write(true)
-            .create(true)
-            .open(cookie_path.clone())?
-            .write_all(cookies_str.as_bytes())?;
-        println!("SAVED YOUR COOKIE IN {}", cookie_path.to_str().unwrap());
-        Ok(())
-    }
-    fn username_and_password() -> (String, String) {
-        println!("Please input Your username and password");
-        let username = rpassword::read_password_from_tty(Some("Username > ")).unwrap();
-        let password = rpassword::read_password_from_tty(Some("Password > ")).unwrap();
-        (username, password)
-    }
-    fn local_cookie_headers() -> Result<HeaderMap, failure::Error> {
-        let cookiejar_path = dirs::home_dir()
-            .unwrap()
-            .join(".atcoder-sample-downloader")
-            .join("cookie.jar");
-        let file = std::fs::File::open(cookiejar_path)?;
-        let reader = std::io::BufReader::new(file);
-
-        let mut cookie_headers = HeaderMap::new();
-        reader.lines().for_each(|line| {
-            cookie_headers.insert(
-                COOKIE,
-                HeaderValue::from_str(&format!("{}", line.unwrap())).unwrap(),
-            );
-        });
-        Ok(cookie_headers)
-    }
 }
 
 #[tokio::main]
@@ -330,7 +271,7 @@ Example:
         )
         .subcommand(
             clap::SubCommand::with_name(&SubCommand::Get.value())
-                .about("Create a new directory from URL")
+                .about("Create a new directory from URL under root path")
                 .arg(
                     clap::Arg::with_name("url")
                         .help("A URL of problem")
@@ -350,6 +291,11 @@ Example:
             clap::SubCommand::with_name(&SubCommand::Login.value())
                 .about("Login AtCoder and save session in your local")
                 .arg(clap::Arg::with_name("url").help("A login URL of AtCoder")),
+        )
+        .subcommand(clap::SubCommand::with_name(&SubCommand::Root.value()).about("Show root path"))
+        .subcommand(
+            clap::SubCommand::with_name(&SubCommand::List.value())
+                .about("List local directories under root path"),
         )
         .get_matches();
 
