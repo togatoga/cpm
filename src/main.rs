@@ -30,7 +30,14 @@ struct Config {
     root: String,
 }
 fn load_config() -> Result<Config, failure::Error> {
-    let config_file = dirs::config_dir().unwrap().join("cpm").join("config.json");
+    std::fs::create_dir_all(dirs::home_dir().unwrap().join(".config").join("cpm"))?;
+    let config_file = dirs::home_dir()
+        .unwrap()
+        .join(".config")
+        .join("cpm")
+        .join("config.json");
+    if !config_file.exists() {}
+
     let file = std::fs::File::open(config_file)?;
     let reader = std::io::BufReader::new(file);
     let config: Config = serde_json::from_reader(reader)?;
@@ -162,6 +169,7 @@ impl AtCoder {
         contest_name.retain(|x| !x.is_whitespace());
         println!("{} {}", contest_name, problem_name);
         let config = load_config()?;
+
         let path = std::path::PathBuf::from(config.root)
             .join("atcoder.jp")
             .join(contest_name)
