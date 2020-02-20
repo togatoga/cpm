@@ -4,8 +4,7 @@ use itertools::Itertools;
 use reqwest::header::{HeaderMap, HeaderValue, COOKIE};
 use selectors::Element;
 use serde::{Deserialize, Serialize};
-use std::io::{BufRead, Write};
-
+use util::ProblemInfo;
 enum SubCommand {
     Get,
     Download,
@@ -169,14 +168,12 @@ impl AtCoder {
         contest_name.retain(|x| !x.is_whitespace());
         println!("{} {}", contest_name, problem_name);
         let config = load_config()?;
-
         let path = std::path::PathBuf::from(config.root)
             .join("atcoder.jp")
             .join(contest_name)
             .join(problem_name);
         let sample_test_cases = parser.sample_cases();
         println!("====== Download Result ======");
-
         if let Some(samples) = sample_test_cases {
             util::create_sample_test_files(&samples, path.join("sample").to_str())?;
             for (idx, (input, output)) in samples.iter().enumerate() {
@@ -185,6 +182,13 @@ impl AtCoder {
             }
         }
         println!("=============================");
+        let info = ProblemInfo {
+            url: url.to_string(),
+            contest_name: parser.contest_name().unwrap(),
+            problem_name: parser.problem_name().unwrap(),
+        };
+        util::create_problem_info_json(info, &path)?;
+        println!("{}", path.to_str().unwrap());
         Ok(())
     }
     pub async fn download(&mut self, url: &str) -> Result<(), failure::Error> {

@@ -1,11 +1,29 @@
 use itertools::Itertools;
 use reqwest::header::{HeaderMap, HeaderValue, COOKIE};
+use serde::{Deserialize, Serialize};
 use std::io::{BufRead, Write};
 
+#[derive(Serialize, Deserialize)]
+pub struct ProblemInfo {
+    pub url: String,
+    pub contest_name: String,
+    pub problem_name: String,
+}
 pub fn create_problem_directory(
     contest_name: &str,
     problem_name: &str,
 ) -> Result<(), failure::Error> {
+    Ok(())
+}
+pub fn create_problem_info_json(
+    info: ProblemInfo,
+    path: &std::path::PathBuf,
+) -> Result<(), failure::Error> {
+    let mut json_file = std::fs::OpenOptions::new()
+        .write(true)
+        .create(true)
+        .open(path.join(".problem.json"))?;
+    json_file.write_all(serde_json::to_string(&info).unwrap().as_bytes())?;
     Ok(())
 }
 pub fn create_sample_test_files(
@@ -15,7 +33,7 @@ pub fn create_sample_test_files(
     let root_path = if let Some(p) = path {
         std::path::PathBuf::from(p)
     } else {
-        dirs::runtime_dir().unwrap()
+        std::env::current_dir()?
     };
     std::fs::create_dir_all(root_path.clone())?;
     for (idx, (input, output)) in test_cases.iter().enumerate() {
