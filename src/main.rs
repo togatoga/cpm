@@ -5,12 +5,14 @@ use reqwest::header::{HeaderMap, HeaderValue, COOKIE};
 use selectors::Element;
 use serde::{Deserialize, Serialize};
 use util::ProblemInfo;
+
 enum SubCommand {
     Get,
     Download,
     Login,
     Root,
     List,
+    Test,
 }
 impl SubCommand {
     fn value(&self) -> String {
@@ -20,6 +22,7 @@ impl SubCommand {
             SubCommand::Login => "login".to_string(),
             SubCommand::Root => "root".to_string(),
             SubCommand::List => "list".to_string(),
+            SubCommand::Test => "test".to_string(),
         }
     }
 }
@@ -228,6 +231,20 @@ impl AtCoder {
         }
         Ok(())
     }
+    pub fn test(&self, command: &str) -> Result<(), failure::Error> {
+
+        //current dir is problem?
+        if std::path::Path::new(".problem.json").exists() || std::path::Path::new(".problem").exists() {
+
+            for entry in glob::glob("sample/*").expect("Failed to read glob pattern") {
+                println!("{}", command);
+                for file in entry.iter().filter(|e| e.is_file()) {
+                    println!("{:?}", file);
+                }
+            }
+        }
+        Ok(())
+    }
 
     pub async fn login(&mut self, url: &str) -> Result<(), failure::Error> {
         let url = url::Url::parse(url)?;
@@ -337,6 +354,15 @@ Example:
             clap::SubCommand::with_name(&SubCommand::List.value())
                 .about("List local directories under root path"),
         )
+        .subcommand(
+            clap::SubCommand::with_name(&SubCommand::Test.value())
+                .about("Test sample test cases")
+                .arg(
+                    clap::Arg::with_name("command")
+                        .help("A execute command run for test cases")
+                        .required(true),
+                ),
+        )
         .get_matches();
     //run sub commands
     let mut atcoder = AtCoder::new();
@@ -379,8 +405,19 @@ Example:
             }
         }
     }
-    if let Some(ref matched) = matches.subcommand_matches(&SubCommand::List.value()) {
+    if let Some(_) = matches.subcommand_matches(&SubCommand::List.value()) {
         match atcoder.list() {
+            Ok(_) => {
+                std::process::exit(0);
+            }
+            Err(e) => {
+                println!("{:?}", e);
+                std::process::exit(1);
+            }
+        }
+    }
+    if let Some(ref matched) = matches.subcommand_matches(&SubCommand::Test.value()) {
+        match atcoder.test(matched.value_of("command").unwrap()) {
             Ok(_) => {
                 std::process::exit(0);
             }
