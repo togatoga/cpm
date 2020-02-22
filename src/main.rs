@@ -213,6 +213,22 @@ impl AtCoder {
         println!("=============================");
         Ok(())
     }
+    pub fn list(&self) -> Result<(), failure::Error> {
+        let config = load_config()?;
+        for entry in walkdir::WalkDir::new(config.root)
+            .into_iter()
+            .filter_map(|e| e.ok())
+        {
+            let file_name = entry.file_name().to_str().unwrap();
+            if file_name == ".problem" || file_name == ".problem.json" {
+                if let Some(dir) = entry.path().parent() {
+                    println!("{}", dir.to_str().unwrap());
+                }
+            }
+        }
+        Ok(())
+    }
+
     pub async fn login(&mut self, url: &str) -> Result<(), failure::Error> {
         let url = url::Url::parse(url)?;
         let resp = self.call_get_request(url.as_str()).await?;
@@ -354,6 +370,17 @@ Example:
             )
             .await
         {
+            Ok(_) => {
+                std::process::exit(0);
+            }
+            Err(e) => {
+                println!("{:?}", e);
+                std::process::exit(1);
+            }
+        }
+    }
+    if let Some(ref matched) = matches.subcommand_matches(&SubCommand::List.value()) {
+        match atcoder.list() {
             Ok(_) => {
                 std::process::exit(0);
             }
