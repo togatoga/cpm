@@ -1,9 +1,12 @@
 mod util;
 
+use colored::*;
 use itertools::Itertools;
 use reqwest::header::{HeaderMap, HeaderValue, COOKIE};
 use selectors::Element;
 use serde::{Deserialize, Serialize};
+use std::io::Read;
+use std::time::Instant;
 use util::ProblemInfo;
 
 enum SubCommand {
@@ -232,17 +235,62 @@ impl AtCoder {
         Ok(())
     }
     pub fn test(&self, command: &str) -> Result<(), failure::Error> {
-
         //current dir is problem?
-        if std::path::Path::new(".problem.json").exists() || std::path::Path::new(".problem").exists() {
-
-            for entry in glob::glob("sample/*").expect("Failed to read glob pattern") {
-                println!("{}", command);
-                for file in entry.iter().filter(|e| e.is_file()) {
-                    println!("{:?}", file);
+        let mut sample_case_paths = vec![]; //(input, output)
+        if std::path::Path::new(".problem.json").exists()
+            || std::path::Path::new(".problem").exists()
+        {
+            let mut case = 1;
+            loop {
+                let input = format!("sample/sample_input_{}.txt", case);
+                let output = format!("sample/sample_output_{}.txt", case);
+                let input_file_path = std::path::PathBuf::from(&input);
+                let output_file_path = std::path::PathBuf::from(&output);
+                if input_file_path.exists() && output_file_path.exists() {
+                    sample_case_paths.push((input_file_path.clone(), output_file_path.clone()));
+                    case += 1;
+                } else {
+                    break;
                 }
             }
         }
+        sample_case_paths.sort();
+        println!("RUNNING TEST CASES...");
+        for (input_file_path, output_file_path) in sample_case_paths.iter() {
+            println!("-----------------------------------------");
+            let input_file = std::fs::File::open(input_file_path)?;
+            let start = std::time::Instant::now();
+            let command_output_child = std::process::Command::new(command)
+                .stdin(input_file)
+                .stdout(std::process::Stdio::piped())
+                .arg(input_file_path)
+                .spawn()?;
+            let output = command_output_child.wait_with_output()?;
+            let elapsed = start.elapsed();
+            let output_string = String::from_utf8(output.stdout).unwrap();
+            println!(
+                "Input: {}",
+                input_file_path.file_name().unwrap().to_str().unwrap()
+            );
+            println!(
+                "Output: {}",
+                output_file_path.file_name().unwrap().to_str().unwrap()
+            );
+            let mut sample_output_string = String::new();
+            std::fs::File::open(output_file_path)?.read_to_string(&mut sample_output_string)?;
+            println!("{} {} ms", "[TIME]".cyan(), elapsed.as_millis());
+            if output_string == sample_output_string {
+                println!("{}", "[OK]".green());
+            } else {
+                println!("{}", "[Wrong Answer]".yellow());
+                //diff
+                println!("The output is");
+                println!("{}", output_string);
+                println!("The judge is");
+                println!("{}", sample_output_string);
+            }
+        }
+
         Ok(())
     }
 

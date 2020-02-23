@@ -21,6 +21,8 @@ serde_json = "1.0"
 serde = "1.0.104"
 walkdir = "2"
 glob = "0.3.0"
+colored = "1.9"
+
 
 [dependencies.reqwest]
 git = "https://github.com/seanmonstar/reqwest"
