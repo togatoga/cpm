@@ -65,6 +65,19 @@ impl AtCoderParser {
             document: scraper::Html::parse_document(html),
         }
     }
+    fn problem_url_list(&self) -> Option<Vec<String>> {
+        //This function is supposed to be called from task url.
+        //e.g https://atcoder.jp/contests/abc155/tasks
+        let main_container_selector =
+            scraper::Selector::parse(r#"div[id="main-container"]"#).unwrap();
+        if let Some(main_container) = self.document.select(&main_container_selector).next() {
+            for href in main_container.select(&scraper::Selector::parse("href").unwrap()) {
+                println!("togatoga");
+            }
+        }
+
+        None
+    }
     fn problem_name(&self) -> Option<String> {
         let main_container_selector =
             scraper::Selector::parse(r#"div[id="main-container"]"#).unwrap();
@@ -159,41 +172,58 @@ impl AtCoder {
     }
     pub async fn get(&mut self, url: &str) -> Result<(), failure::Error> {
         let url = url::Url::parse(url)?;
-        if let Ok(cookie_headers) = util::local_cookie_headers() {
-            self.cookie_headers = cookie_headers
-        }
-        let resp = self.call_get_request(url.as_str()).await?;
-        self.parse_response(resp).await?;
-        let parser = AtCoderParser::new(&self.html.as_ref().unwrap());
+        let service = url.domain().unwrap();
+        match service {
+            "atcoder.jp" => {
+                if let Ok(cookie_headers) = util::local_cookie_headers() {
+                    self.cookie_headers = cookie_headers
+                }
+                let resp = self.call_get_request(url.as_str()).await?;
+                self.parse_response(resp).await?;
+                let parser = AtCoderParser::new(&self.html.as_ref().unwrap());
 
-        let mut problem_name = parser.problem_name().unwrap();
-        let mut contest_name = parser.contest_name().unwrap();
-        //Remove extra whitespace
-        problem_name.retain(|x| !x.is_whitespace());
-        contest_name.retain(|x| !x.is_whitespace());
-        println!("{} {}", contest_name, problem_name);
-        let config = load_config()?;
-        let path = std::path::PathBuf::from(config.root)
-            .join("atcoder.jp")
-            .join(contest_name)
-            .join(problem_name);
-        let sample_test_cases = parser.sample_cases();
-        println!("====== Download Result ======");
-        if let Some(samples) = sample_test_cases {
-            util::create_sample_test_files(&samples, path.join("sample").to_str())?;
-            for (idx, (input, output)) in samples.iter().enumerate() {
-                println!("=== Sample Test Case {} ===", idx + 1);
-                println!("Input:\n{}\nOutput:\n{}", input, output);
+                let query = url.path().split("/").last().unwrap();
+                match query {
+                    "tasks" => {
+                        let url_list = parser.problem_url_list();
+                        //
+                    }
+                    _ => {
+                        let mut problem_name = parser.problem_name().unwrap();
+                        let mut contest_name = parser.contest_name().unwrap();
+                        //Remove extra whitespace
+                        problem_name.retain(|x| !x.is_whitespace());
+                        contest_name.retain(|x| !x.is_whitespace());
+                        println!("{} {}", contest_name, problem_name);
+                        let config = load_config()?;
+                        let path = std::path::PathBuf::from(config.root)
+                            .join("atcoder.jp")
+                            .join(contest_name)
+                            .join(problem_name);
+                        let sample_test_cases = parser.sample_cases();
+                        println!("====== Download Result ======");
+                        if let Some(samples) = sample_test_cases {
+                            util::create_sample_test_files(&samples, path.join("sample").to_str())?;
+                            for (idx, (input, output)) in samples.iter().enumerate() {
+                                println!("=== Sample Test Case {} ===", idx + 1);
+                                println!("Input:\n{}\nOutput:\n{}", input, output);
+                            }
+                        }
+                        println!("=============================");
+                        let info = ProblemInfo {
+                            url: url.to_string(),
+                            contest_name: parser.contest_name().unwrap(),
+                            problem_name: parser.problem_name().unwrap(),
+                        };
+                        util::create_problem_info_json(info, &path)?;
+                        println!("{}", path.to_str().unwrap());
+                    }
+                }
+            }
+            _ => {
+                println!("{} isn't supported yet. X(", service);
             }
         }
-        println!("=============================");
-        let info = ProblemInfo {
-            url: url.to_string(),
-            contest_name: parser.contest_name().unwrap(),
-            problem_name: parser.problem_name().unwrap(),
-        };
-        util::create_problem_info_json(info, &path)?;
-        println!("{}", path.to_str().unwrap());
         Ok(())
     }
     pub async fn download(&mut self, url: &str) -> Result<(), failure::Error> {
