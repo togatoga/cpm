@@ -6,7 +6,6 @@ use reqwest::header::{HeaderMap, HeaderValue, COOKIE};
 use selectors::Element;
 use serde::{Deserialize, Serialize};
 use std::io::Read;
-use std::time::Instant;
 use util::ProblemInfo;
 
 enum SubCommand {
@@ -249,9 +248,20 @@ impl AtCoder {
                 if input_file_path.exists() && output_file_path.exists() {
                     sample_case_paths.push((input_file_path.clone(), output_file_path.clone()));
                     case += 1;
-                } else {
-                    break;
+                    continue;
                 }
+                //support old format
+                let old_input = format!("sample/sample_{:02}_in.txt", case - 1);
+                let old_output = format!("sample/sample_{:02}_out.txt", case - 1);
+                println!("{} {}", old_input, old_output);
+                let input_file_path = std::path::PathBuf::from(&old_input);
+                let output_file_path = std::path::PathBuf::from(&old_output);
+                if input_file_path.exists() && output_file_path.exists() {
+                    sample_case_paths.push((input_file_path.clone(), output_file_path.clone()));
+                    case += 1;
+                    continue;
+                }
+                break;
             }
         }
         sample_case_paths.sort();
