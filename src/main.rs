@@ -68,15 +68,38 @@ impl AtCoderParser {
     fn problem_url_list(&self) -> Option<Vec<String>> {
         //This function is supposed to be called from task url.
         //e.g https://atcoder.jp/contests/abc155/tasks
+
+        let mut url_list = vec![];
         let main_container_selector =
             scraper::Selector::parse(r#"div[id="main-container"]"#).unwrap();
         if let Some(main_container) = self.document.select(&main_container_selector).next() {
-            for href in main_container.select(&scraper::Selector::parse("href").unwrap()) {
-                println!("togatoga");
+            for a in main_container.select(&scraper::Selector::parse("a").unwrap()) {
+                if let Some(url) = a.value().attr("href") {
+                    url_list.push(url.clone());
+                }
             }
         }
+        url_list.sort();
+        url_list.dedup();
+        let url_list: Vec<String> = url_list
+            .iter()
+            .filter_map(|url| {
+                let paths: Vec<&str> = url.split("/").collect();
+                if paths.len() == 5 {
+                    // /contests/abc147/tasks/abc147_a
 
-        None
+                    if paths[1] == "contests" && paths[3] == "tasks" {
+                        return Some(url.to_string());
+                    }
+                }
+                None
+            })
+            .collect();
+        if !url_list.is_empty() {
+            Some(url_list)
+        } else {
+            None
+        }
     }
     fn problem_name(&self) -> Option<String> {
         let main_container_selector =
@@ -185,8 +208,9 @@ impl AtCoder {
                 let query = url.path().split("/").last().unwrap();
                 match query {
                     "tasks" => {
-                        let url_list = parser.problem_url_list();
-                        //
+                        if let Some(url_list) = parser.problem_url_list() {
+                            println!("{:?}", url_list);
+                        }
                     }
                     _ => {
                         let mut problem_name = parser.problem_name().unwrap();
