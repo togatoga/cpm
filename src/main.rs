@@ -227,11 +227,6 @@ impl AtCoder {
             if sample_verbose {
                 println!("=============================");
             }
-            println!(
-                "Saved {} sample cases: {}",
-                samples.len(),
-                path.join("sample").to_str().unwrap_or("")
-            );
         }
 
         let info = ProblemInfo {
@@ -240,7 +235,10 @@ impl AtCoder {
             problem_name: parser.problem_name().unwrap(),
         };
         util::create_problem_info_json(info, &path)?;
-        println!("Created directory: {}", path.to_str().unwrap());
+        println!(
+            "Created directory and saved sample cases: {}",
+            path.to_str().unwrap()
+        );
         Ok(())
     }
     pub async fn get(&mut self, url: &str) -> Result<(), failure::Error> {
