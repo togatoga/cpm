@@ -9,12 +9,7 @@ pub struct ProblemInfo {
     pub contest_name: String,
     pub problem_name: String,
 }
-pub fn create_problem_directory(
-    contest_name: &str,
-    problem_name: &str,
-) -> Result<(), failure::Error> {
-    Ok(())
-}
+
 pub fn create_problem_info_json(
     info: ProblemInfo,
     path: &std::path::PathBuf,

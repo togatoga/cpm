@@ -193,6 +193,56 @@ impl AtCoder {
             html: None,
         }
     }
+
+    fn create_problem_dir(
+        &self,
+        url: &url::Url,
+        parser: &AtCoderParser,
+        sample_verbose: bool,
+    ) -> Result<(), failure::Error> {
+        let mut problem_name = parser.problem_name().unwrap();
+        let mut contest_name = parser.contest_name().unwrap();
+        //Remove extra whitespaces
+        problem_name.retain(|x| !x.is_whitespace());
+        contest_name.retain(|x| !x.is_whitespace());
+
+        let config = load_config()?;
+        let path = std::path::PathBuf::from(config.root)
+            .join("atcoder.jp")
+            .join(contest_name)
+            .join(problem_name);
+        let sample_test_cases = parser.sample_cases();
+
+        if let Some(samples) = sample_test_cases {
+            if sample_verbose {
+                println!("====== Download Result ======");
+            }
+            util::create_sample_test_files(&samples, path.join("sample").to_str())?;
+            for (idx, (input, output)) in samples.iter().enumerate() {
+                if sample_verbose {
+                    println!("=== Sample Test Case {} ===", idx + 1);
+                    println!("Input:\n{}\nOutput:\n{}", input, output);
+                }
+            }
+            if sample_verbose {
+                println!("=============================");
+            }
+            println!(
+                "Saved {} sample cases: {}",
+                samples.len(),
+                path.join("sample").to_str().unwrap_or("")
+            );
+        }
+
+        let info = ProblemInfo {
+            url: url.to_string(),
+            contest_name: parser.contest_name().unwrap(),
+            problem_name: parser.problem_name().unwrap(),
+        };
+        util::create_problem_info_json(info, &path)?;
+        println!("Created directory: {}", path.to_str().unwrap());
+        Ok(())
+    }
     pub async fn get(&mut self, url: &str) -> Result<(), failure::Error> {
         let url = url::Url::parse(url)?;
         let service = url.domain().unwrap();
@@ -209,38 +259,17 @@ impl AtCoder {
                 match query {
                     "tasks" => {
                         if let Some(url_list) = parser.problem_url_list() {
-                            println!("{:?}", url_list);
+                            for task_url in url_list.iter() {
+                                let task_url = url.join(task_url)?;
+                                let resp = self.call_get_request(task_url.as_str()).await?;
+                                self.parse_response(resp).await?;
+                                let parser = AtCoderParser::new(&self.html.as_ref().unwrap());
+                                self.create_problem_dir(&task_url, &parser, false)?;
+                            }
                         }
                     }
                     _ => {
-                        let mut problem_name = parser.problem_name().unwrap();
-                        let mut contest_name = parser.contest_name().unwrap();
-                        //Remove extra whitespace
-                        problem_name.retain(|x| !x.is_whitespace());
-                        contest_name.retain(|x| !x.is_whitespace());
-                        println!("{} {}", contest_name, problem_name);
-                        let config = load_config()?;
-                        let path = std::path::PathBuf::from(config.root)
-                            .join("atcoder.jp")
-                            .join(contest_name)
-                            .join(problem_name);
-                        let sample_test_cases = parser.sample_cases();
-                        println!("====== Download Result ======");
-                        if let Some(samples) = sample_test_cases {
-                            util::create_sample_test_files(&samples, path.join("sample").to_str())?;
-                            for (idx, (input, output)) in samples.iter().enumerate() {
-                                println!("=== Sample Test Case {} ===", idx + 1);
-                                println!("Input:\n{}\nOutput:\n{}", input, output);
-                            }
-                        }
-                        println!("=============================");
-                        let info = ProblemInfo {
-                            url: url.to_string(),
-                            contest_name: parser.contest_name().unwrap(),
-                            problem_name: parser.problem_name().unwrap(),
-                        };
-                        util::create_problem_info_json(info, &path)?;
-                        println!("{}", path.to_str().unwrap());
+                        self.create_problem_dir(&url, &parser, true)?;
                     }
                 }
             }
