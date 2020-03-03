@@ -351,11 +351,15 @@ impl AtCoder {
             println!("-----------------------------------------");
             let input_file = std::fs::File::open(input_file_path)?;
             let start = std::time::Instant::now();
+            let commands: Vec<&str> = command.split_whitespace().collect();
+            let command = commands[0].clone();
+            let args: Vec<&str> = commands.into_iter().skip(1).collect();
             let command_output_child = std::process::Command::new(command)
                 .stdin(input_file)
                 .stdout(std::process::Stdio::piped())
-                .arg(input_file_path)
+                .args(args)
                 .spawn()?;
+
             let output = command_output_child.wait_with_output()?;
             let elapsed = start.elapsed();
             let output_string = String::from_utf8(output.stdout).unwrap();
