@@ -2,6 +2,7 @@ mod util;
 
 use colored::*;
 use cpm::atcoder::AtCoderParser;
+use cpm::codeforces::CodeforcesParser;
 use reqwest::header::{HeaderMap, HeaderValue, COOKIE};
 use serde::{Deserialize, Serialize};
 use std::io::Read;
@@ -46,7 +47,7 @@ fn load_config() -> Result<Config, failure::Error> {
     let config: Config = serde_json::from_reader(reader)?;
     Ok(config)
 }
-struct AtCoder {
+struct Cpm {
     client: reqwest::Client,
     //for request
     cookie_headers: HeaderMap,
@@ -54,13 +55,13 @@ struct AtCoder {
     html: Option<String>,
 }
 
-impl AtCoder {
-    fn new() -> AtCoder {
+impl Cpm {
+    fn new() -> Self {
         let client = reqwest::Client::builder()
             .cookie_store(true)
             .build()
             .unwrap();
-        AtCoder {
+        Cpm {
             client: client,
             cookie_headers: HeaderMap::new(),
             html: None,
@@ -116,9 +117,9 @@ impl AtCoder {
     }
     pub async fn get(&mut self, url: &str) -> Result<(), failure::Error> {
         let url = url::Url::parse(url)?;
-        let service = url.domain().unwrap();
-        match service {
-            "atcoder.jp" => {
+        let host = url.host_str();
+        match host {
+            Some("atcoder.jp") => {
                 if let Ok(cookie_headers) = util::local_cookie_headers() {
                     self.cookie_headers = cookie_headers
                 }
@@ -144,8 +145,16 @@ impl AtCoder {
                     }
                 }
             }
+            Some("codeforces.com") => {
+                let resp = self.call_get_request(url.as_str()).await?;
+                self.parse_response(resp).await?;
+                let parser = CodeforcesParser::new(&self.html.as_ref().unwrap());
+            }
+            Some(host) => {
+                println!("{} isn't supported yet. X(", host);
+            }
             _ => {
-                println!("{} isn't supported yet. X(", service);
+                println!("Something wrong happened");
             }
         }
         Ok(())
@@ -381,9 +390,10 @@ Example:
         )
         .get_matches();
     //run sub commands
-    let mut atcoder = AtCoder::new();
+    let mut cpm = Cpm::new();
+
     if let Some(ref matched) = matches.subcommand_matches(&SubCommand::Get.value()) {
-        match atcoder.get(matched.value_of("url").unwrap()).await {
+        match cpm.get(matched.value_of("url").unwrap()).await {
             Ok(_) => std::process::exit(0),
             Err(e) => {
                 println!("{:?}", e);
@@ -393,7 +403,7 @@ Example:
     }
 
     if let Some(ref matched) = matches.subcommand_matches(&SubCommand::Download.value()) {
-        match atcoder.download(matched.value_of("url").unwrap()).await {
+        match cpm.download(matched.value_of("url").unwrap()).await {
             Ok(_) => {
                 std::process::exit(0);
             }
@@ -404,7 +414,7 @@ Example:
         }
     }
     if let Some(ref matched) = matches.subcommand_matches(&SubCommand::Login.value()) {
-        match atcoder
+        match cpm
             .login(
                 matched
                     .value_of("url")
@@ -421,8 +431,9 @@ Example:
             }
         }
     }
+
     if let Some(_) = matches.subcommand_matches(&SubCommand::List.value()) {
-        match atcoder.list() {
+        match cpm.list() {
             Ok(_) => {
                 std::process::exit(0);
             }
@@ -433,7 +444,7 @@ Example:
         }
     }
     if let Some(ref matched) = matches.subcommand_matches(&SubCommand::Test.value()) {
-        match atcoder.test(matched.value_of("command").unwrap()) {
+        match cpm.test(matched.value_of("command").unwrap()) {
             Ok(_) => {
                 std::process::exit(0);
             }
