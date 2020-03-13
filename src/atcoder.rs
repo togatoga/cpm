@@ -30,7 +30,7 @@ impl AtCoderParser {
         let url_list: Vec<String> = url_list
             .iter()
             .filter_map(|url| {
-                let paths: Vec<&str> = url.split("/").collect();
+                let paths: Vec<&str> = url.split('/').collect();
                 if paths.len() == 5 {
                     // /contests/abc147/tasks/abc147_a
 
