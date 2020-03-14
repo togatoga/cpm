@@ -3,6 +3,7 @@ mod util;
 use colored::*;
 use cpm::atcoder::AtCoderParser;
 use cpm::codeforces::CodeforcesParser;
+use cpm::parser::Parser;
 use reqwest::header::{HeaderMap, HeaderValue, COOKIE};
 use serde::{Deserialize, Serialize};
 use std::io::Read;
