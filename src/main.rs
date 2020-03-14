@@ -80,7 +80,7 @@ impl Cpm {
         //Remove extra whitespaces
         problem_name.retain(|x| !x.is_whitespace());
         contest_name.retain(|x| !x.is_whitespace());
-        let host_name = url.host_str();
+        let host_name = url.host_str().unwrap();
         let config = load_config()?;
         let path = std::path::PathBuf::from(config.root)
             .join(host_name)
@@ -149,7 +149,11 @@ impl Cpm {
             Some("codeforces.com") => {
                 let resp = self.call_get_request(url.as_str()).await?;
                 self.parse_response(resp).await?;
+
                 let parser = CodeforcesParser::new(&self.html.as_ref().unwrap());
+                println!("{:?}", parser.problem_name());
+                println!("{:?}", parser.contest_name());
+                println!("{:?}", parser.sample_cases())
             }
             Some(host) => {
                 println!("{} isn't supported yet. X(", host);

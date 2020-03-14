@@ -55,7 +55,9 @@ impl Parser for CodeforcesParser {
     fn sample_cases(&self) -> Option<Vec<(String, String)>> {
         let document = scraper::Html::parse_document(&self.document);
         let sample_test_selector = scraper::Selector::parse(r#"div[class="sample-test"]"#).unwrap();
-        if let Some(sample) = document.select(&sample_test_selector).next() {}
+        if let Some(sample) = document.select(&sample_test_selector).next() {
+            println!("{:?}", sample.text().collect::<Vec<_>>());
+        }
         None
     }
 }
