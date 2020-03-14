@@ -69,10 +69,10 @@ impl Cpm {
         }
     }
 
-    fn create_problem_dir(
+    fn create_problem_dir<T: Parser>(
         &self,
         url: &url::Url,
-        parser: &AtCoderParser,
+        parser: &T,
         sample_verbose: bool,
     ) -> Result<(), failure::Error> {
         let mut problem_name = parser.problem_name().unwrap();
@@ -80,10 +80,10 @@ impl Cpm {
         //Remove extra whitespaces
         problem_name.retain(|x| !x.is_whitespace());
         contest_name.retain(|x| !x.is_whitespace());
-
+        let host_name = url.host_str();
         let config = load_config()?;
         let path = std::path::PathBuf::from(config.root)
-            .join("atcoder.jp")
+            .join(host_name)
             .join(contest_name)
             .join(problem_name);
         let sample_test_cases = parser.sample_cases();
