@@ -149,11 +149,8 @@ impl Cpm {
             Some("codeforces.com") => {
                 let resp = self.call_get_request(url.as_str()).await?;
                 self.parse_response(resp).await?;
-
                 let parser = CodeforcesParser::new(&self.html.as_ref().unwrap());
-                println!("{:?}", parser.problem_name());
-                println!("{:?}", parser.contest_name());
-                println!("{:?}", parser.sample_cases())
+                self.create_problem_dir(&url, &parser, true)?;
             }
             Some(host) => {
                 println!("{} isn't supported yet. X(", host);
