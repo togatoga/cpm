@@ -10,6 +10,7 @@ use std::io::Read;
 use util::ProblemInfo;
 
 enum SubCommand {
+    Init,
     Get,
     Download,
     Login,
@@ -20,6 +21,7 @@ enum SubCommand {
 impl SubCommand {
     fn value(&self) -> String {
         match *self {
+            SubCommand::Init => "init".to_string(),
             SubCommand::Get => "get".to_string(),
             SubCommand::Download => "download".to_string(),
             SubCommand::Login => "login".to_string(),
@@ -34,14 +36,27 @@ impl SubCommand {
 struct Config {
     root: String,
 }
-fn load_config() -> Result<Config, failure::Error> {
+fn init_config() -> Result<(), failure::Error> {
     std::fs::create_dir_all(dirs::home_dir().unwrap().join(".config").join("cpm"))?;
+
     let config_file = dirs::home_dir()
         .unwrap()
         .join(".config")
         .join("cpm")
         .join("config.json");
-    if !config_file.exists() {}
+    let config = Config {
+        root: "".to_string(),
+    };
+    serde_json::to_writer(&std::fs::File::create(config_file)?, &config)?;
+    
+    Ok(())
+}
+fn load_config() -> Result<Config, failure::Error> {
+    let config_file = dirs::home_dir()
+        .unwrap()
+        .join(".config")
+        .join("cpm")
+        .join("config.json");
 
     let file = std::fs::File::open(config_file)?;
     let reader = std::io::BufReader::new(file);
@@ -114,6 +129,10 @@ impl Cpm {
             "Created directory and saved sample cases: {}",
             path.to_str().unwrap()
         );
+        Ok(())
+    }
+    pub fn init(&self) -> Result<(), failure::Error> {
+        init_config()?;
         Ok(())
     }
     pub async fn get(&mut self, url: &str) -> Result<(), failure::Error> {
@@ -354,6 +373,9 @@ Example:
     cpm login",
         )
         .subcommand(
+            clap::SubCommand::with_name(&SubCommand::Init.value()).about("Initialize config file"),
+        )
+        .subcommand(
             clap::SubCommand::with_name(&SubCommand::Get.value())
                 .about("Create a new directory from URL under root path")
                 .arg(
@@ -393,6 +415,15 @@ Example:
         .get_matches();
     //run sub commands
     let mut cpm = Cpm::new();
+    if let Some(_) = matches.subcommand_matches(&SubCommand::Init.value()) {
+        match cpm.init() {
+            Ok(_) => std::process::exit(0),
+            Err(e) => {
+                println!("{:?}", e);
+                std::process::exit(1);
+            }
+        }
+    }
 
     if let Some(ref matched) = matches.subcommand_matches(&SubCommand::Get.value()) {
         match cpm.get(matched.value_of("url").unwrap()).await {
