@@ -50,8 +50,21 @@ fn init_config() -> Result<(), failure::Error> {
         };
         serde_json::to_writer(&std::fs::File::create(config_file.clone())?, &config)?;
     }
-    let open_command = std::env::var("EDITOR").unwrap_or("open".to_string());
-    std::process::Command::new(open_command)
+    let fallback_cmd = if cfg!(target_os = "linux") {
+        "xdg-open".to_string()
+    } else if cfg!(target_os = "macos") {
+        "open".to_string()
+    } else if cfg!(target_os = "windows") {
+        let cmd = std::path::Path::new(&std::env::var("SYSTEMROOT").unwrap())
+            .join("System32")
+            .join("rundll32.exe");
+        cmd.clone().to_str().unwrap().to_string()
+    } else {
+        assert!(false);
+        "None".to_string()
+    };
+    let open_cmd = std::env::var("EDITOR").unwrap_or(fallback_cmd);
+    std::process::Command::new(open_cmd)
         .arg(&config_file)
         .status()?;
 
