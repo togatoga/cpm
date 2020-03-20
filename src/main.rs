@@ -44,11 +44,17 @@ fn init_config() -> Result<(), failure::Error> {
         .join(".config")
         .join("cpm")
         .join("config.json");
-    let config = Config {
-        root: "".to_string(),
-    };
-    serde_json::to_writer(&std::fs::File::create(config_file)?, &config)?;
-    
+    if !config_file.exists() {
+        let config = Config {
+            root: "".to_string(),
+        };
+        serde_json::to_writer(&std::fs::File::create(config_file.clone())?, &config)?;
+    }
+    let open_command = std::env::var("EDITOR").unwrap_or("open".to_string());
+    std::process::Command::new(open_command)
+        .arg(&config_file)
+        .status()?;
+
     Ok(())
 }
 fn load_config() -> Result<Config, failure::Error> {
