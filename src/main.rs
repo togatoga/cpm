@@ -269,6 +269,7 @@ impl Cpm {
         }
         sample_case_paths.sort();
         println!("RUNNING TEST CASES...");
+        let mut ac_cnt = 0;
         for (input_file_path, output_file_path) in sample_case_paths.iter() {
             println!("-----------------------------------------");
             let input_file = std::fs::File::open(input_file_path)?;
@@ -298,6 +299,7 @@ impl Cpm {
             println!("{} {} ms", "[TIME]".cyan(), elapsed.as_millis());
             if output_string == sample_output_string {
                 println!("{}", "[OK]".green());
+                ac_cnt += 1;
             } else {
                 println!("{}", "[Wrong Answer]".yellow());
                 //diff
@@ -307,6 +309,22 @@ impl Cpm {
                 println!("{}", sample_output_string);
             }
         }
+        let status = if ac_cnt == sample_case_paths.len() {
+            format!(
+                "{} : {} / {}",
+                "[Accept]".green(),
+                ac_cnt,
+                sample_case_paths.len()
+            )
+        } else {
+            format!(
+                "{} : {} / {}",
+                "[Wrong Answer]".yellow(),
+                ac_cnt,
+                sample_case_paths.len()
+            )
+        };
+        println!("{}", status);
 
         Ok(())
     }
@@ -427,7 +445,7 @@ Example:
                 .about("Test sample test cases")
                 .arg(
                     clap::Arg::with_name("command")
-                        .help("A execute command run for test cases")
+                        .help("An execute command run for test cases")
                         .required(true),
                 ),
         )
