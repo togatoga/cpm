@@ -9,14 +9,19 @@ pub struct AtCoderParser {
 impl Parser for AtCoderParser {
     fn problem_name(&self) -> Option<String> {
         let head_selector = scraper::Selector::parse("head").unwrap();
-        if let Some(head) = self.document.select(&head_selector).next() {
-            let title_selector = scraper::Selector::parse("title").unwrap();
-            if let Some(title_selector) = head.select(&title_selector).next() {
-                let titile = title_selector.text().collect::<String>();
-                return Some(titile);
-            }
-        }
-        None
+        let problem_name: Option<String> =
+            self.document
+                .select(&head_selector)
+                .next()
+                .and_then(|head| {
+                    let title_selector = scraper::Selector::parse("title").unwrap();
+                    let title = head
+                        .select(&title_selector)
+                        .next()
+                        .and_then(|title| Some(title.text().collect::<String>()));
+                    title
+                });
+        problem_name
     }
     fn contest_name(&self) -> Option<String> {
         let contest_title_selector =
