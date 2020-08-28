@@ -8,21 +8,12 @@ pub struct AtCoderParser {
 
 impl Parser for AtCoderParser {
     fn problem_name(&self) -> Option<String> {
-        let main_container_selector =
-            scraper::Selector::parse(r#"div[id="main-container"]"#).unwrap();
-
-        if let Some(main_container) = self.document.select(&main_container_selector).next() {
-            if let Some(col_selector) = main_container
-                .select(&scraper::Selector::parse(r#"div[class="col-sm-12"]"#).unwrap())
-                .next()
-            {
-                if let Some(span_selector) = col_selector
-                    .select(&scraper::Selector::parse(r#"span[class="h2"]"#).unwrap())
-                    .next()
-                {
-                    let problem_name = span_selector.text().collect::<String>();
-                    return Some(problem_name);
-                }
+        let head_selector = scraper::Selector::parse("head").unwrap();
+        if let Some(head) = self.document.select(&head_selector).next() {
+            let title_selector = scraper::Selector::parse("title").unwrap();
+            if let Some(title_selector) = head.select(&title_selector).next() {
+                let titile = title_selector.text().collect::<String>();
+                return Some(titile);
             }
         }
         None
