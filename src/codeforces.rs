@@ -62,15 +62,21 @@ impl Parser for CodeforcesParser {
             let output_selector = scraper::Selector::parse(r#"div[class="output"]"#).unwrap();
 
             for input in sample.select(&input_selector).into_iter() {
-                let sample_input = input.text().skip(1).collect::<String>();
-                if !sample_input.is_empty() {
-                    sample_inputs.push(sample_input);
+                let pre_selector = scraper::Selector::parse("pre").unwrap();
+                if let Some(pre) = input.select(&pre_selector).next() {
+                    let sample_input = pre.text().collect::<String>();
+                    if !sample_input.is_empty() {
+                        sample_inputs.push(sample_input);
+                    }
                 }
             }
             for output in sample.select(&output_selector).into_iter() {
-                let sample_output = output.text().skip(1).collect::<String>();
-                if !sample_output.is_empty() {
-                    sample_outputs.push(sample_output);
+                let pre_selector = scraper::Selector::parse("pre").unwrap();
+                if let Some(pre) = output.select(&pre_selector).next() {
+                    let sample_output = pre.text().collect::<String>();
+                    if !sample_output.is_empty() {
+                        sample_outputs.push(sample_output);
+                    }
                 }
             }
         }
