@@ -8,19 +8,12 @@ pub struct AtCoderParser {
 
 impl Parser for AtCoderParser {
     fn problem_name(&self) -> Option<String> {
-        let head_selector = scraper::Selector::parse("head").unwrap();
-        let problem_name: Option<String> =
-            self.document
-                .select(&head_selector)
-                .next()
-                .and_then(|head| {
-                    let title_selector = scraper::Selector::parse("title").unwrap();
-                    let title = head
-                        .select(&title_selector)
-                        .next()
-                        .and_then(|title| Some(title.text().collect::<String>()));
-                    title
-                });
+        let title_selector = scraper::Selector::parse("head > title").unwrap();
+        let problem_name = self
+            .document
+            .select(&title_selector)
+            .next()
+            .and_then(|title| Some(title.text().collect::<String>()));
         problem_name
     }
     fn contest_name(&self) -> Option<String> {
