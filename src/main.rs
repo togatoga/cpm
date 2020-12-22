@@ -1,17 +1,16 @@
-mod util;
-
 use colored::*;
-use cpm::atcoder::AtCoderParser;
 use cpm::codeforces::CodeforcesParser;
 use cpm::parser::Parser;
+use cpm::util;
+use cpm::{atcoder::AtCoderParser, util::ProblemInfo};
 use reqwest::header::{HeaderMap, HeaderValue, COOKIE};
 use serde::{Deserialize, Serialize};
-use std::io::Read;
-use util::ProblemInfo;
+use std::io::{BufReader, Read};
 
 enum SubCommand {
     Init,
     Get,
+    Open,
     Download,
     Login,
     Root,
@@ -23,6 +22,7 @@ impl SubCommand {
         match *self {
             SubCommand::Init => "init".to_string(),
             SubCommand::Get => "get".to_string(),
+            SubCommand::Open => "open".to_string(),
             SubCommand::Download => "download".to_string(),
             SubCommand::Login => "login".to_string(),
             SubCommand::Root => "root".to_string(),
@@ -219,6 +219,13 @@ impl Cpm {
             }
         }
         println!("=============================");
+        Ok(())
+    }
+    pub fn open(&self) -> Result<(), failure::Error> {
+        let file = std::fs::File::open(".problem.json")?;
+        let reader = BufReader::new(file);
+        let info: ProblemInfo = serde_json::from_reader(reader)?;
+        webbrowser::open(&info.url)?;
         Ok(())
     }
     pub fn list(&self) -> Result<(), failure::Error> {
@@ -422,6 +429,9 @@ Example:
                 ),
         )
         .subcommand(
+            clap::SubCommand::with_name(&SubCommand::Open.value()).about("Open the problem page"),
+        )
+        .subcommand(
             clap::SubCommand::with_name(&SubCommand::Download.value())
                 .about("Download sample test cases in your local")
                 .arg(
@@ -458,6 +468,15 @@ Example:
             Err(e) => {
                 println!("{:?}", e);
                 std::process::exit(1);
+            }
+        }
+    }
+    if let Some(_) = matches.subcommand_matches(&SubCommand::Open.value()) {
+        match cpm.open() {
+            Ok(_) => std::process::exit(0),
+            Err(e) => {
+                println!("{:?}", e);
+                std::process::exit(1)
             }
         }
     }
