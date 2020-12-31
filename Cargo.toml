@@ -24,6 +24,7 @@ glob = "0.3.0"
 colored = "1.9"
 easy-scraper = "0.1"
 webbrowser = "0.5.5"
+unicode-xid = "0.0.4"
 
 [dependencies.reqwest]
 git = "https://github.com/seanmonstar/reqwest"

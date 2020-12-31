@@ -6,6 +6,7 @@ use cpm::{atcoder::AtCoderParser, util::ProblemInfo};
 use reqwest::header::{HeaderMap, HeaderValue, COOKIE};
 use serde::{Deserialize, Serialize};
 use std::io::{BufReader, Read};
+use unicode_xid::UnicodeXID;
 
 enum SubCommand {
     Init,
@@ -114,6 +115,13 @@ impl Cpm {
         //Remove extra whitespaces
         problem_name.retain(|x| !x.is_whitespace());
         contest_name.retain(|x| !x.is_whitespace());
+
+        let problem_name = problem_name
+            .chars()
+            .into_iter()
+            .map(|x| if UnicodeXID::is_xid_start(x) { x } else { '_' })
+            .collect::<String>();
+
         let host_name = url.host_str().unwrap();
         let config = load_config()?;
         let path = std::path::PathBuf::from(config.root)
