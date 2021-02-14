@@ -164,17 +164,27 @@ impl Cpm {
     }
     pub async fn get(&mut self, url: &str) -> Result<(), failure::Error> {
         let url = url::Url::parse(url)?;
+
         let host = url.host_str();
         match host {
             Some("atcoder.jp") => {
                 if let Ok(cookie_headers) = util::local_cookie_headers() {
                     self.cookie_headers = cookie_headers
                 }
+                let mut paths: Vec<_> = url.path().split("/").collect();
+                if !paths.contains(&"tasks") {
+                    paths.push("tasks");
+                }
+                let path = paths.join("/");
+                let mut url = url;
+                url.set_path(&path);
+
                 let resp = self.call_get_request(url.as_str()).await?;
                 self.parse_response(resp).await?;
                 let parser = AtCoderParser::new(&self.html.as_ref().unwrap());
 
-                let query = url.path().split("/").last().unwrap();
+                let query = url.path().split("/").last().expect("No element");
+
                 match query {
                     "tasks" => {
                         if let Some(url_list) = parser.problem_url_list() {
