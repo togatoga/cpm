@@ -6,7 +6,6 @@ use cpm::{atcoder::AtCoderParser, util::ProblemInfo};
 use reqwest::header::{HeaderMap, HeaderValue, COOKIE};
 use serde::{Deserialize, Serialize};
 use std::io::{BufReader, Read};
-use unicode_xid::UnicodeXID;
 
 enum SubCommand {
     Init,
@@ -110,24 +109,25 @@ impl Cpm {
         parser: &T,
         sample_verbose: bool,
     ) -> Result<(), failure::Error> {
-        let mut problem_name = parser.problem_name().unwrap();
-        let mut contest_name = parser.contest_name().unwrap();
-        //Remove extra whitespaces
-        problem_name.retain(|x| !x.is_whitespace());
-        contest_name.retain(|x| !x.is_whitespace());
-
-        let problem_name = problem_name
-            .chars()
-            .into_iter()
-            .map(|x| if UnicodeXID::is_xid_start(x) { x } else { '_' })
-            .collect::<String>();
-
         let host_name = url.host_str().unwrap();
         let config = load_config()?;
-        let path = std::path::PathBuf::from(config.root)
-            .join(host_name)
-            .join(contest_name)
-            .join(problem_name);
+        let path = {
+            let mut path = std::path::PathBuf::from(config.root).join(host_name);
+            std::path::PathBuf::from(url.path())
+                .into_iter()
+                .filter_map(|comp| {
+                    let comp = comp.to_str().unwrap();
+                    if comp != std::path::MAIN_SEPARATOR.to_string() {
+                        Some(comp)
+                    } else {
+                        None
+                    }
+                })
+                .for_each(|name| {
+                    path.push(name);
+                });
+            path
+        };
         let sample_test_cases = parser.sample_cases();
 
         if let Some(samples) = sample_test_cases {
@@ -153,7 +153,7 @@ impl Cpm {
         };
         util::create_problem_info_json(info, &path)?;
         println!(
-            "Created directory and saved sample cases: {}",
+            "Created a directory and saved sample cases: {}",
             path.to_str().unwrap()
         );
         Ok(())
