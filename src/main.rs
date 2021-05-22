@@ -151,8 +151,8 @@ impl Cpm {
 
         let info = ProblemInfo {
             url: url.to_string(),
-            contest_name: parser.contest_name().unwrap(),
-            problem_name: parser.problem_name().unwrap(),
+            contest_name: parser.contest_name().expect("failed to get contest name"),
+            problem_name: parser.problem_name().expect("failed to get problem name"),
         };
         util::create_problem_info_json(info, &path)?;
         println!(
