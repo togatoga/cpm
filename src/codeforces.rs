@@ -80,11 +80,8 @@ impl Parser for CodeforcesParser {
                 }
             }
         }
-        let samples: Vec<(String, String)> = sample_inputs
-            .into_iter()
-            .zip(sample_outputs)
-            .map(|x| x)
-            .collect();
+        let samples: Vec<(String, String)> =
+            sample_inputs.into_iter().zip(sample_outputs).collect();
         if !samples.is_empty() {
             Some(samples)
         } else {

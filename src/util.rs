@@ -30,6 +30,7 @@ pub fn create_sample_test_files(
     } else {
         std::env::current_dir()?
     };
+
     std::fs::create_dir_all(root_path.clone())?;
     for (idx, (input, output)) in test_cases.iter().enumerate() {
         //e.g sample_input_1.txt sample_output_1.txt

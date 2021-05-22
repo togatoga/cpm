@@ -5,8 +5,10 @@ use cpm::util;
 use cpm::{atcoder::AtCoderParser, util::ProblemInfo};
 use reqwest::header::{HeaderMap, HeaderValue, COOKIE};
 use serde::{Deserialize, Serialize};
-use std::io::{BufReader, Read};
-use unicode_xid::UnicodeXID;
+use std::{
+    fs::File,
+    io::{BufReader, Read},
+};
 
 enum SubCommand {
     Init,
@@ -110,24 +112,25 @@ impl Cpm {
         parser: &T,
         sample_verbose: bool,
     ) -> Result<(), failure::Error> {
-        let mut problem_name = parser.problem_name().unwrap();
-        let mut contest_name = parser.contest_name().unwrap();
-        //Remove extra whitespaces
-        problem_name.retain(|x| !x.is_whitespace());
-        contest_name.retain(|x| !x.is_whitespace());
-
-        let problem_name = problem_name
-            .chars()
-            .into_iter()
-            .map(|x| if UnicodeXID::is_xid_start(x) { x } else { '_' })
-            .collect::<String>();
-
         let host_name = url.host_str().unwrap();
         let config = load_config()?;
-        let path = std::path::PathBuf::from(config.root)
-            .join(host_name)
-            .join(contest_name)
-            .join(problem_name);
+        let path = {
+            let mut path = std::path::PathBuf::from(config.root).join(host_name);
+            std::path::PathBuf::from(url.path())
+                .into_iter()
+                .filter_map(|comp| {
+                    let comp = comp.to_str().unwrap();
+                    if comp != std::path::MAIN_SEPARATOR.to_string() {
+                        Some(comp)
+                    } else {
+                        None
+                    }
+                })
+                .for_each(|name| {
+                    path.push(name);
+                });
+            path
+        };
         let sample_test_cases = parser.sample_cases();
 
         if let Some(samples) = sample_test_cases {
@@ -153,7 +156,7 @@ impl Cpm {
         };
         util::create_problem_info_json(info, &path)?;
         println!(
-            "Created directory and saved sample cases: {}",
+            "Created a directory and saved sample cases: {}",
             path.to_str().unwrap()
         );
         Ok(())
@@ -246,7 +249,12 @@ impl Cpm {
         webbrowser::open(&info.url)?;
         Ok(())
     }
-    pub fn list(&self) -> Result<(), failure::Error> {
+    pub fn root(&self) -> Result<(), failure::Error> {
+        let config = load_config()?;
+        println!("{}", config.root);
+        Ok(())
+    }
+    pub fn list(&self, all: bool) -> Result<(), failure::Error> {
         let config = load_config()?;
         for entry in walkdir::WalkDir::new(config.root)
             .into_iter()
@@ -255,6 +263,30 @@ impl Cpm {
             let file_name = entry.file_name().to_str().unwrap();
             if file_name == ".problem" || file_name == ".problem.json" {
                 if let Some(dir) = entry.path().parent() {
+                    if all {
+                        let f = File::open(entry.path())?;
+                        let reader = BufReader::new(f);
+                        if let Ok(info) = serde_json::from_reader::<_, ProblemInfo>(reader) {
+                            let contest_name = info
+                                .contest_name
+                                .chars()
+                                .filter(|&c| c != '\n' && c != '\t')
+                                .collect::<String>();
+                            let problem_name = info
+                                .problem_name
+                                .chars()
+                                .filter(|&c| c != '\n' && c != '\t')
+                                .collect::<String>();
+
+                            println!(
+                                "{} {} {}",
+                                contest_name,
+                                problem_name,
+                                dir.to_str().unwrap(),
+                            );
+                            continue;
+                        }
+                    }
                     println!("{}", dir.to_str().unwrap());
                 }
             }
@@ -466,7 +498,8 @@ Example:
         .subcommand(clap::SubCommand::with_name(&SubCommand::Root.value()).about("Show root path"))
         .subcommand(
             clap::SubCommand::with_name(&SubCommand::List.value())
-                .about("List local directories under root path"),
+                .about("List local directories under root path")
+                .arg_from_usage("-a, --all 'Prints all information of the problem'"),
         )
         .subcommand(
             clap::SubCommand::with_name(&SubCommand::Test.value())
@@ -491,6 +524,16 @@ Example:
     }
     if let Some(_) = matches.subcommand_matches(&SubCommand::Open.value()) {
         match cpm.open() {
+            Ok(_) => std::process::exit(0),
+            Err(e) => {
+                println!("{:?}", e);
+                std::process::exit(1)
+            }
+        }
+    }
+
+    if let Some(_) = matches.subcommand_matches(&SubCommand::Root.value()) {
+        match cpm.root() {
             Ok(_) => std::process::exit(0),
             Err(e) => {
                 println!("{:?}", e);
@@ -539,8 +582,8 @@ Example:
         }
     }
 
-    if let Some(_) = matches.subcommand_matches(&SubCommand::List.value()) {
-        match cpm.list() {
+    if let Some(args) = matches.subcommand_matches(&SubCommand::List.value()) {
+        match cpm.list(args.is_present("all")) {
             Ok(_) => {
                 std::process::exit(0);
             }
