@@ -1,7 +1,5 @@
 use crate::parser::Parser;
 use easy_scraper::Pattern;
-use itertools::Itertools;
-
 pub struct AtCoderParser {
     html: String,
     document: scraper::Html,
@@ -68,6 +66,7 @@ impl Parser for AtCoderParser {
                 "#,
             )
             .unwrap();
+
             ja_input_pattern
                 .matches(&self.html)
                 .into_iter()
@@ -88,9 +87,6 @@ impl Parser for AtCoderParser {
             }
         }
 
-        // make cases unique to remove extra duplicated language cases
-        let input_cases: Vec<String> = input_cases.into_iter().unique().collect();
-        let output_cases: Vec<String> = output_cases.into_iter().unique().collect();
         let sample_test_cases: Vec<(String, String)> = input_cases
             .into_iter()
             .zip(output_cases)
