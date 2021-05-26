@@ -1,8 +1,9 @@
 use crate::parser::Parser;
+use easy_scraper::Pattern;
 use itertools::Itertools;
-use selectors::Element;
 
 pub struct AtCoderParser {
+    html: String,
     document: scraper::Html,
 }
 
@@ -13,7 +14,7 @@ impl Parser for AtCoderParser {
             .document
             .select(&title_selector)
             .next()
-            .and_then(|title| Some(title.text().collect::<String>()));
+            .map(|title| title.text().collect::<String>());
         problem_name
     }
     fn contest_name(&self) -> Option<String> {
@@ -26,34 +27,32 @@ impl Parser for AtCoderParser {
         None
     }
     fn sample_cases(&self) -> Option<Vec<(String, String)>> {
-        let task_statement_selector =
-            scraper::Selector::parse(r#"div[id="task-statement"]"#).unwrap();
-        let pre_selector = scraper::Selector::parse("pre").unwrap();
-        let h3_selector = scraper::Selector::parse("h3").unwrap();
-        let input_h3_text = vec!["入力例", "Sample Input"];
-        let output_h3_text = vec!["出力例", "Sample Output"];
-
         let mut input_cases = vec![];
         let mut output_cases = vec![];
-        if let Some(task_statement) = self.document.select(&task_statement_selector).next() {
-            for pre in task_statement.select(&pre_selector) {
-                if let Some(pre_parent) = pre.parent_element() {
-                    if let Some(h3) = pre_parent.select(&h3_selector).next() {
-                        let h3_text = h3.text().collect::<String>();
-                        let input = input_h3_text.iter().any(|&x| h3_text.contains(x));
-                        let output = output_h3_text.iter().any(|&x| h3_text.contains(x));
-                        let text = pre.text().collect::<String>();
-                        if input {
-                            input_cases.push(text);
-                        } else if output {
-                            output_cases.push(text);
-                        }
-                    }
+
+        let pattern = Pattern::new(
+            r#"
+            <div class="part">
+            <section>
+            <h3>Sample {{type}} {{id}}</h3><pre>
+            {{value}}
+            </pre>
+            </section>
+            </div>
+            "#,
+        )
+        .unwrap();
+        let ms = pattern.matches(&self.html);
+        for m in ms.iter() {
+            match m["type"].as_str() {
+                "Input" => input_cases.push(m["value"].to_string()),
+                "Output" => output_cases.push(m["value"].to_string()),
+                _ => {
+                    panic!("type must be Input or Output");
                 }
-            }
-        } else {
-            return None;
+            };
         }
+
         // make cases unique to remove extra duplicated language cases
         let input_cases: Vec<String> = input_cases.into_iter().unique().collect();
         let output_cases: Vec<String> = output_cases.into_iter().unique().collect();
@@ -69,6 +68,7 @@ impl Parser for AtCoderParser {
 impl AtCoderParser {
     pub fn new(html: &str) -> AtCoderParser {
         AtCoderParser {
+            html: html.to_string(),
             document: scraper::Html::parse_document(html),
         }
     }
@@ -82,11 +82,11 @@ impl AtCoderParser {
         if let Some(main_container) = self.document.select(&main_container_selector).next() {
             for a in main_container.select(&scraper::Selector::parse("a").unwrap()) {
                 if let Some(url) = a.value().attr("href") {
-                    url_list.push(url.clone());
+                    url_list.push(url);
                 }
             }
         }
-        url_list.sort();
+        url_list.sort_unstable();
         url_list.dedup();
         let url_list: Vec<String> = url_list
             .iter()

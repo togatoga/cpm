@@ -61,10 +61,9 @@ fn init_config() -> Result<(), failure::Error> {
         let cmd = std::path::Path::new(&std::env::var("SYSTEMROOT").unwrap())
             .join("System32")
             .join("rundll32.exe");
-        cmd.clone().to_str().unwrap().to_string()
+        cmd.to_str().unwrap().to_string()
     } else {
-        assert!(false);
-        "None".to_string()
+        unreachable!("UNKNOWN OS");
     };
     let open_cmd = std::env::var("EDITOR").unwrap_or(fallback_cmd);
     std::process::Command::new(open_cmd)
@@ -100,7 +99,7 @@ impl Cpm {
             .build()
             .unwrap();
         Cpm {
-            client: client,
+            client,
             cookie_headers: HeaderMap::new(),
             html: None,
         }
@@ -117,7 +116,7 @@ impl Cpm {
         let path = {
             let mut path = std::path::PathBuf::from(config.root).join(host_name);
             std::path::PathBuf::from(url.path())
-                .into_iter()
+                .iter()
                 .filter_map(|comp| {
                     let comp = comp.to_str().unwrap();
                     if comp != std::path::MAIN_SEPARATOR.to_string() {
@@ -174,7 +173,7 @@ impl Cpm {
                 if let Ok(cookie_headers) = util::local_cookie_headers() {
                     self.cookie_headers = cookie_headers
                 }
-                let mut paths: Vec<_> = url.path().split("/").collect();
+                let mut paths: Vec<_> = url.path().split('/').collect();
                 if !paths.contains(&"tasks") {
                     paths.push("tasks");
                 }
@@ -186,7 +185,7 @@ impl Cpm {
                 self.parse_response(resp).await?;
                 let parser = AtCoderParser::new(&self.html.as_ref().unwrap());
 
-                let query = url.path().split("/").last().expect("No element");
+                let query = url.path().split('/').last().expect("No element");
 
                 match query {
                     "tasks" => {
@@ -332,7 +331,7 @@ impl Cpm {
             let input_file = std::fs::File::open(input_file_path)?;
             let start = std::time::Instant::now();
             let commands: Vec<&str> = command.split_whitespace().collect();
-            let command = commands[0].clone();
+            let command = <&str>::clone(commands.first().expect("No command"));
             let args: Vec<&str> = commands.into_iter().skip(1).collect();
             let command_output_child = std::process::Command::new(command)
                 .stdin(input_file)
@@ -513,7 +512,10 @@ Example:
         .get_matches();
     //run sub commands
     let mut cpm = Cpm::new();
-    if let Some(_) = matches.subcommand_matches(&SubCommand::Init.value()) {
+    if matches
+        .subcommand_matches(&SubCommand::Init.value())
+        .is_some()
+    {
         match cpm.init() {
             Ok(_) => std::process::exit(0),
             Err(e) => {
@@ -522,7 +524,10 @@ Example:
             }
         }
     }
-    if let Some(_) = matches.subcommand_matches(&SubCommand::Open.value()) {
+    if matches
+        .subcommand_matches(&SubCommand::Open.value())
+        .is_some()
+    {
         match cpm.open() {
             Ok(_) => std::process::exit(0),
             Err(e) => {
@@ -532,7 +537,10 @@ Example:
         }
     }
 
-    if let Some(_) = matches.subcommand_matches(&SubCommand::Root.value()) {
+    if matches
+        .subcommand_matches(&SubCommand::Root.value())
+        .is_some()
+    {
         match cpm.root() {
             Ok(_) => std::process::exit(0),
             Err(e) => {
