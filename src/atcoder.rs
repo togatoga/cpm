@@ -30,7 +30,7 @@ impl Parser for AtCoderParser {
         let mut input_cases = vec![];
         let mut output_cases = vec![];
 
-        let pattern = Pattern::new(
+        let en_pattern = Pattern::new(
             r#"
             <div class="part">
             <section>
@@ -42,15 +42,50 @@ impl Parser for AtCoderParser {
             "#,
         )
         .unwrap();
-        let ms = pattern.matches(&self.html);
-        for m in ms.iter() {
-            match m["type"].as_str() {
-                "Input" => input_cases.push(m["value"].to_string()),
-                "Output" => output_cases.push(m["value"].to_string()),
-                _ => {
-                    panic!("type must be Input or Output");
-                }
-            };
+        let en_ms = en_pattern.matches(&self.html);
+        if en_ms.is_empty() {
+            let ja_input_pattern = Pattern::new(
+                r#"
+                <div class="part">
+                <section>
+                <h3>入力例 {{id}}</h3><pre>
+                {{value}}
+                </pre>
+                </section>
+                </div>
+                "#,
+            )
+            .unwrap();
+            let ja_output_pattern = Pattern::new(
+                r#"
+                <div class="part">
+                <section>
+                <h3>出力例 {{id}}</h3><pre>
+                {{value}}
+                </pre>
+                </section>
+                </div>
+                "#,
+            )
+            .unwrap();
+            ja_input_pattern
+                .matches(&self.html)
+                .into_iter()
+                .for_each(|m| input_cases.push(m["value"].to_string()));
+            ja_output_pattern
+                .matches(&self.html)
+                .into_iter()
+                .for_each(|m| output_cases.push(m["value"].to_string()));
+        } else {
+            for m in en_ms.iter() {
+                match m["type"].as_str() {
+                    "Input" => input_cases.push(m["value"].to_string()),
+                    "Output" => output_cases.push(m["value"].to_string()),
+                    _ => {
+                        panic!(format!("UNKNOWN type: {}", m["type"]));
+                    }
+                };
+            }
         }
 
         // make cases unique to remove extra duplicated language cases
