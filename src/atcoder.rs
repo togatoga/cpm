@@ -24,75 +24,14 @@ impl Parser for AtCoderParser {
         }
         None
     }
-    fn sample_cases(&self) -> Option<Vec<(String, String)>> {
-        let mut input_cases = vec![];
-        let mut output_cases = vec![];
 
-        let en_pattern = Pattern::new(
-            r#"
-            <div class="part">
-            <section>
-            <h3>Sample {{type}} {{id}}</h3><pre>
-            {{value}}
-            </pre>
-            </section>
-            </div>
-            "#,
-        )
-        .unwrap();
-        let en_ms = en_pattern.matches(&self.html);
-        if en_ms.is_empty() {
-            let ja_input_pattern = Pattern::new(
-                r#"
-                <div class="part">
-                <section>
-                <h3>入力例 {{id}}</h3><pre>
-                {{value}}
-                </pre>
-                </section>
-                </div>
-                "#,
-            )
-            .unwrap();
-            let ja_output_pattern = Pattern::new(
-                r#"
-                <div class="part">
-                <section>
-                <h3>出力例 {{id}}</h3><pre>
-                {{value}}
-                </pre>
-                </section>
-                </div>
-                "#,
-            )
-            .unwrap();
-
-            ja_input_pattern
-                .matches(&self.html)
-                .into_iter()
-                .for_each(|m| input_cases.push(m["value"].to_string()));
-            ja_output_pattern
-                .matches(&self.html)
-                .into_iter()
-                .for_each(|m| output_cases.push(m["value"].to_string()));
+    fn sample_cases(&self) -> Vec<(String, String)> {
+        let sample_cases = self.extract_sample_cases();
+        if !sample_cases.is_empty() {
+            sample_cases
         } else {
-            for m in en_ms.iter() {
-                match m["type"].as_str() {
-                    "Input" => input_cases.push(m["value"].to_string()),
-                    "Output" => output_cases.push(m["value"].to_string()),
-                    _ => {
-                        panic!(format!("UNKNOWN type: {}", m["type"]));
-                    }
-                };
-            }
+            self.extract_old_format_sample_cases()
         }
-
-        let sample_test_cases: Vec<(String, String)> = input_cases
-            .into_iter()
-            .zip(output_cases)
-            .map(|(input, output)| (input, output))
-            .collect();
-        Some(sample_test_cases)
     }
 }
 
@@ -148,5 +87,110 @@ impl AtCoderParser {
             }
         }
         None
+    }
+    fn extract_sample_cases(&self) -> Vec<(String, String)> {
+        // new format
+        let en_pattern = Pattern::new(
+            r#"
+    <div class="part">
+    <section>
+    <h3>Sample {{type}} {{id}}</h3><pre>
+    {{value}}
+    </pre>
+    </section>
+    </div>
+    "#,
+        )
+        .unwrap();
+        let ja_input_pattern = Pattern::new(
+            r#"
+    <div class="part">
+    <section>
+    <h3>入力例 {{id}}</h3><pre>
+    {{value}}
+    </pre>
+    </section>
+    </div>
+    "#,
+        )
+        .unwrap();
+        let ja_output_pattern = Pattern::new(
+            r#"
+    <div class="part">
+    <section>
+    <h3>出力例 {{id}}</h3><pre>
+    {{value}}
+    </pre>
+    </section>
+    </div>
+    "#,
+        )
+        .unwrap();
+
+        let mut input_cases = vec![];
+        let mut output_cases = vec![];
+        // try an English first
+        let en_ms = en_pattern.matches(&self.html);
+        if en_ms.is_empty() {
+            ja_input_pattern
+                .matches(&self.html)
+                .into_iter()
+                .for_each(|m| input_cases.push(m["value"].to_string()));
+            ja_output_pattern
+                .matches(&self.html)
+                .into_iter()
+                .for_each(|m| output_cases.push(m["value"].to_string()));
+        } else {
+            for m in en_ms.iter() {
+                match m["type"].as_str() {
+                    "Input" => input_cases.push(m["value"].to_string()),
+                    "Output" => output_cases.push(m["value"].to_string()),
+                    _ => {
+                        panic!(format!("UNKNOWN type: {}", m["type"]));
+                    }
+                };
+            }
+        }
+        input_cases
+            .into_iter()
+            .zip(output_cases)
+            .map(|(input, output)| (input, output))
+            .collect()
+    }
+    fn extract_old_format_sample_cases(&self) -> Vec<(String, String)> {
+        let ja_old_input_pattern = Pattern::new(
+            r#"
+        <div class="part">
+        <h3>入力例 {{id}}</h3>
+        <section>
+        <pre class="prettyprint linenums">
+        {{value}}
+        </pre>
+        </section>
+        </div>
+        "#,
+        )
+        .unwrap();
+
+        let ja_old_output_pattern = Pattern::new(
+            r#"
+        <div class="part">
+        <h3>出力例 {{id}}</h3>
+        <section>
+        <pre class="prettyprint linenums">
+        {{value}}
+        </pre>
+        </section>
+        </div>
+        "#,
+        )
+        .unwrap();
+        let sample_cases: Vec<_> = ja_old_input_pattern
+            .matches(&self.html)
+            .into_iter()
+            .zip(ja_old_output_pattern.matches(&self.html))
+            .map(|(input, output)| (input["value"].to_string(), output["value"].to_string()))
+            .collect();
+        sample_cases
     }
 }

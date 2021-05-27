@@ -130,22 +130,20 @@ impl Cpm {
                 });
             path
         };
-        let sample_test_cases = parser.sample_cases();
+        let samples = parser.sample_cases();
 
-        if let Some(samples) = sample_test_cases {
+        if sample_verbose {
+            println!("====== Download Result ======");
+        }
+        util::create_sample_test_files(&samples, path.join("sample").to_str())?;
+        for (idx, (input, output)) in samples.iter().enumerate() {
             if sample_verbose {
-                println!("====== Download Result ======");
+                println!("=== Sample Test Case {} ===", idx + 1);
+                println!("Input:\n{}\nOutput:\n{}", input, output);
             }
-            util::create_sample_test_files(&samples, path.join("sample").to_str())?;
-            for (idx, (input, output)) in samples.iter().enumerate() {
-                if sample_verbose {
-                    println!("=== Sample Test Case {} ===", idx + 1);
-                    println!("Input:\n{}\nOutput:\n{}", input, output);
-                }
-            }
-            if sample_verbose {
-                println!("=============================");
-            }
+        }
+        if sample_verbose {
+            println!("=============================");
         }
 
         let info = ProblemInfo {
@@ -231,13 +229,13 @@ impl Cpm {
         let sample_test_cases = parser.sample_cases();
 
         println!("====== Download Result ======");
-        if let Some(samples) = sample_test_cases {
-            util::create_sample_test_files(&samples, None)?;
-            for (idx, (input, output)) in samples.iter().enumerate() {
-                println!("=== Sample Test Case {} ===", idx + 1);
-                println!("Input:\n{}\nOutput:\n{}", input, output);
-            }
+
+        util::create_sample_test_files(&sample_test_cases, None)?;
+        for (idx, (input, output)) in sample_test_cases.iter().enumerate() {
+            println!("=== Sample Test Case {} ===", idx + 1);
+            println!("Input:\n{}\nOutput:\n{}", input, output);
         }
+
         println!("=============================");
         Ok(())
     }
