@@ -339,7 +339,9 @@ impl Cpm {
 
             let output = command_output_child.wait_with_output()?;
             let elapsed = start.elapsed();
-            let output_string = String::from_utf8(output.stdout).unwrap();
+            let output_string = String::from_utf8(output.stdout)
+                .and_then(|s| Ok(s.trim().to_string()))
+                .expect("No stdout");
             println!(
                 "Input: {}",
                 input_file_path.file_name().unwrap().to_str().unwrap()
