@@ -146,7 +146,7 @@ impl AtCoderParser {
                     "Input" => input_cases.push(m["value"].to_string()),
                     "Output" => output_cases.push(m["value"].to_string()),
                     _ => {
-                        panic!(format!("UNKNOWN type: {}", m["type"]));
+                        panic!("UNKNOWN type: {}", m["type"]);
                     }
                 };
             }
