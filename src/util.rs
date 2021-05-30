@@ -83,11 +83,8 @@ pub fn local_cookie_headers() -> Result<HeaderMap, failure::Error> {
     let reader = std::io::BufReader::new(file);
 
     let mut cookie_headers = HeaderMap::new();
-    reader.lines().for_each(|line| {
-        cookie_headers.insert(
-            COOKIE,
-            HeaderValue::from_str(&format!("{}", line.unwrap())).unwrap(),
-        );
+    reader.lines().map(|line| line.unwrap()).for_each(|line| {
+        cookie_headers.insert(COOKIE, HeaderValue::from_str(&line).unwrap());
     });
     Ok(cookie_headers)
 }

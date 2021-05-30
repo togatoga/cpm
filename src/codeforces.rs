@@ -52,7 +52,7 @@ impl Parser for CodeforcesParser {
             None
         }
     }
-    fn sample_cases(&self) -> Option<Vec<(String, String)>> {
+    fn sample_cases(&self) -> Vec<(String, String)> {
         let document = scraper::Html::parse_document(&self.document);
         let sample_test_selector = scraper::Selector::parse(r#"div[class="sample-test"]"#).unwrap();
         let mut sample_inputs = vec![];
@@ -82,10 +82,6 @@ impl Parser for CodeforcesParser {
         }
         let samples: Vec<(String, String)> =
             sample_inputs.into_iter().zip(sample_outputs).collect();
-        if !samples.is_empty() {
-            Some(samples)
-        } else {
-            None
-        }
+        samples
     }
 }
