@@ -354,7 +354,16 @@ impl Cpm {
             let mut sample_output_string = String::new();
             std::fs::File::open(output_file_path)?.read_to_string(&mut sample_output_string)?;
             println!("{} {} ms", "[TIME]".cyan(), elapsed.as_millis());
-            if output_string == sample_output_string {
+
+            let mut ok = true;
+            for (o, s) in output_string.lines().zip(sample_output_string.lines()) {
+                if o.trim() != s.trim() {
+                    ok = false;
+                    break;
+                }
+            }
+
+            if ok {
                 println!("{}", "[OK]".green());
                 ac_cnt += 1;
             } else {
