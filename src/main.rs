@@ -339,9 +339,8 @@ impl Cpm {
 
             let output = command_output_child.wait_with_output()?;
             let elapsed = start.elapsed();
-            let output_string = String::from_utf8(output.stdout)
-                .and_then(|s| Ok(s.trim().to_string()))
-                .expect("No stdout");
+            let output_string = String::from_utf8(output.stdout).map(|s| s.trim().to_string())?;
+
             println!(
                 "Input: {}",
                 input_file_path.file_name().unwrap().to_str().unwrap()
@@ -355,11 +354,20 @@ impl Cpm {
             println!("{} {} ms", "[TIME]".cyan(), elapsed.as_millis());
 
             let mut ok = true;
-            for (o, s) in output_string.lines().zip(sample_output_string.lines()) {
-                if o.trim() != s.trim() {
+
+            let mut output_iter = output_string.lines();
+
+            for s in sample_output_string.lines() {
+                if let Some(o) = output_iter.next() {
+                    if o.trim() != s.trim() {
+                        ok = false;
+                    }
+                } else {
                     ok = false;
-                    break;
                 }
+            }
+            while let Some(rest) = output_iter.next() {
+                ok &= rest.chars().all(|c| c.is_whitespace() || c == '\n');
             }
 
             if ok {
