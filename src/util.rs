@@ -55,8 +55,8 @@ pub fn save_cookie_in_local(response: &reqwest::Response) -> Result<(), failure:
         .cookies()
         .map(|cookie| format!("{}={}", cookie.name(), cookie.value()))
         .join(";");
-    let path = dirs::home_dir().unwrap().join(".atcoder-sample-downloader");
-    //create $HOME/.atcoder-sample-downloader
+    let path = dirs::home_dir().unwrap().join(".cpm");
+    //create $HOME/.cpm
     std::fs::create_dir_all(path.clone())?;
     //create cookie.jar under this directory
     let cookie_path = path.join("cookie.jar");
@@ -75,10 +75,7 @@ pub fn username_and_password() -> (String, String) {
     (username, password)
 }
 pub fn local_cookie_headers() -> Result<HeaderMap, failure::Error> {
-    let cookiejar_path = dirs::home_dir()
-        .unwrap()
-        .join(".atcoder-sample-downloader")
-        .join("cookie.jar");
+    let cookiejar_path = dirs::home_dir().unwrap().join(".cpm").join("cookie.jar");
     let file = std::fs::File::open(cookiejar_path)?;
     let reader = std::io::BufReader::new(file);
 
