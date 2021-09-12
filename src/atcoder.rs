@@ -1,4 +1,4 @@
-use std::fmt::format;
+
 
 use crate::parser::Parser;
 use easy_scraper::Pattern;
@@ -237,7 +237,7 @@ impl AtCoderParser {
                 .zip(output_matches)
                 .map(|(input, output)| (input["value"].to_string(), output["value"].to_string()))
                 .collect();
-            if matches.len() > 0 {
+            if !matches.is_empty() {
                 return Some(matches);
             }
         }
