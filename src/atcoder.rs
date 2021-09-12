@@ -1,5 +1,3 @@
-
-
 use crate::parser::Parser;
 use easy_scraper::Pattern;
 pub struct AtCoderParser {
