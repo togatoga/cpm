@@ -181,7 +181,7 @@ impl Cpm {
 
                 let resp = self.call_get_request(url.as_str()).await?;
                 self.parse_response(resp).await?;
-                let parser = AtCoderParser::new(&self.html.as_ref().unwrap());
+                let parser = AtCoderParser::new(self.html.as_ref().unwrap());
 
                 let query = url.path().split('/').last().expect("No element");
 
@@ -192,7 +192,7 @@ impl Cpm {
                                 let task_url = url.join(task_url)?;
                                 let resp = self.call_get_request(task_url.as_str()).await?;
                                 self.parse_response(resp).await?;
-                                let parser = AtCoderParser::new(&self.html.as_ref().unwrap());
+                                let parser = AtCoderParser::new(self.html.as_ref().unwrap());
                                 self.create_problem_dir(&task_url, &parser, false)?;
                             }
                         }
@@ -205,7 +205,7 @@ impl Cpm {
             Some("codeforces.com") => {
                 let resp = self.call_get_request(url.as_str()).await?;
                 self.parse_response(resp).await?;
-                let parser = CodeforcesParser::new(&self.html.as_ref().unwrap());
+                let parser = CodeforcesParser::new(self.html.as_ref().unwrap());
                 self.create_problem_dir(&url, &parser, true)?;
             }
             Some(host) => {
@@ -225,7 +225,7 @@ impl Cpm {
         let resp = self.call_get_request(url.as_str()).await?;
         self.parse_response(resp).await?;
 
-        let parser = AtCoderParser::new(&self.html.as_ref().unwrap());
+        let parser = AtCoderParser::new(self.html.as_ref().unwrap());
         let sample_test_cases = parser.sample_cases();
 
         println!("====== Download Result ======");
@@ -366,7 +366,7 @@ impl Cpm {
                     ok = false;
                 }
             }
-            while let Some(rest) = output_iter.next() {
+            for rest in output_iter {
                 ok &= rest.chars().all(|c| c.is_whitespace() || c == '\n');
             }
 
@@ -567,7 +567,7 @@ Example:
         }
     }
 
-    if let Some(ref matched) = matches.subcommand_matches(&SubCommand::Get.value()) {
+    if let Some(matched) = matches.subcommand_matches(&SubCommand::Get.value()) {
         match cpm.get(matched.value_of("url").unwrap()).await {
             Ok(_) => std::process::exit(0),
             Err(e) => {
@@ -577,7 +577,7 @@ Example:
         }
     }
 
-    if let Some(ref matched) = matches.subcommand_matches(&SubCommand::Download.value()) {
+    if let Some(matched) = matches.subcommand_matches(&SubCommand::Download.value()) {
         match cpm.download(matched.value_of("url").unwrap()).await {
             Ok(_) => {
                 std::process::exit(0);
@@ -588,7 +588,7 @@ Example:
             }
         }
     }
-    if let Some(ref matched) = matches.subcommand_matches(&SubCommand::Login.value()) {
+    if let Some(matched) = matches.subcommand_matches(&SubCommand::Login.value()) {
         match cpm
             .login(
                 matched
@@ -618,7 +618,7 @@ Example:
             }
         }
     }
-    if let Some(ref matched) = matches.subcommand_matches(&SubCommand::Test.value()) {
+    if let Some(matched) = matches.subcommand_matches(&SubCommand::Test.value()) {
         match cpm.test(matched.value_of("command").unwrap()) {
             Ok(_) => {
                 std::process::exit(0);
