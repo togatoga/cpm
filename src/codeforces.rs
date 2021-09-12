@@ -27,7 +27,8 @@ impl Parser for CodeforcesParser {
         )
         .unwrap();
         let ms = pattern.matches(&self.document);
-        ms.first().map(|problem_name| problem_name["problem_name"].to_string())
+        ms.first()
+            .map(|problem_name| problem_name["problem_name"].to_string())
     }
     fn contest_name(&self) -> Option<String> {
         let pattern = Pattern::new(
@@ -42,7 +43,8 @@ impl Parser for CodeforcesParser {
          "#
         ).unwrap();
         let ms = pattern.matches(&self.document);
-        ms.first().map(|contest_name| contest_name["contest_name"].to_string())
+        ms.first()
+            .map(|contest_name| contest_name["contest_name"].to_string())
     }
     fn sample_cases(&self) -> Vec<(String, String)> {
         let document = scraper::Html::parse_document(&self.document);

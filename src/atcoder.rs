@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 use crate::parser::Parser;
 use easy_scraper::Pattern;
 pub struct AtCoderParser {
@@ -31,6 +33,7 @@ impl Parser for AtCoderParser {
             sample_cases
         } else {
             self.extract_old_format_sample_cases()
+                .map_or(vec![], |sample_cases| sample_cases)
         }
     }
 }
@@ -157,40 +160,88 @@ impl AtCoderParser {
             .map(|(input, output)| (input, output))
             .collect()
     }
-    fn extract_old_format_sample_cases(&self) -> Vec<(String, String)> {
-        let ja_old_input_pattern = Pattern::new(
-            r#"
-        <div class="part">
-        <h3>入力例 {{id}}</h3>
-        <section>
-        <pre class="prettyprint linenums">
-        {{value}}
-        </pre>
-        </section>
-        </div>
-        "#,
-        )
-        .unwrap();
 
-        let ja_old_output_pattern = Pattern::new(
-            r#"
-        <div class="part">
-        <h3>出力例 {{id}}</h3>
-        <section>
-        <pre class="prettyprint linenums">
-        {{value}}
-        </pre>
-        </section>
-        </div>
-        "#,
-        )
-        .unwrap();
-        let sample_cases: Vec<_> = ja_old_input_pattern
-            .matches(&self.html)
-            .into_iter()
-            .zip(ja_old_output_pattern.matches(&self.html))
-            .map(|(input, output)| (input["value"].to_string(), output["value"].to_string()))
-            .collect();
-        sample_cases
+    fn extract_old_format_sample_cases(&self) -> Option<Vec<(String, String)>> {
+        let sample_case_patterns = || -> Vec<(Pattern, Pattern)> {
+            let mut patterns = vec![];
+            let en_input = Pattern::new(
+                r#"
+                <div class="part"><h3>Sample Input {{id}}</h3><section><pre>
+            {{value}}
+            </pre></section></div>
+            "#,
+            )
+            .unwrap();
+            let en_output = Pattern::new(
+                r#"
+            <div class="part"><h3>Sample Output {{id}}</h3><section><pre>
+            {{value}}
+            </pre></section></div>
+            "#,
+            )
+            .unwrap();
+            patterns.push((en_input, en_output));
+
+            let ja_input = Pattern::new(
+                r#"
+                <div class="part"><h3>入力例{{id}}</h3><section><pre>
+            {{value}}
+            </pre></section></div>
+            "#,
+            )
+            .unwrap();
+            let ja_output = Pattern::new(
+                r#"
+            <div class="part"><h3>出力例{{id}}</h3><section><pre>
+            {{value}}
+            </pre></section></div>
+            "#,
+            )
+            .unwrap();
+            patterns.push((ja_input, ja_output));
+
+            let ja_input = Pattern::new(
+                r#"
+                <div class="part">
+                <section>
+                <h3>入力例{{id}}</h3>
+                <pre>
+                {{value}}
+                </pre>
+
+                </section>
+                </div>
+            "#,
+            )
+            .unwrap();
+            let ja_output = Pattern::new(
+                r#"
+                <h3>出力例{{id}}</h3>
+                <pre>
+                {{value}}
+                </pre>                
+            "#,
+            )
+            .unwrap();
+            patterns.push((ja_input, ja_output));
+
+            patterns
+        };
+
+        for (input_pattern, output_pattern) in sample_case_patterns() {
+            let input_matches = input_pattern.matches(&self.html);
+            let output_matches = output_pattern.matches(&self.html);
+            //dbg!(&input_matches, &output_matches);
+            let matches: Vec<_> = input_matches
+                .into_iter()
+                .zip(output_matches)
+                .map(|(input, output)| (input["value"].to_string(), output["value"].to_string()))
+                .collect();
+            if matches.len() > 0 {
+                return Some(matches);
+            }
+        }
+
+        None
     }
 }
