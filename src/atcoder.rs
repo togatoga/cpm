@@ -243,3 +243,56 @@ impl AtCoderParser {
         None
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::fmt::format;
+
+    use serde::de::value::MapAccessDeserializer;
+
+    use crate::parser::Parser;
+
+    use super::AtCoderParser;
+
+    async fn request(url: &str) -> String {
+        let html = reqwest::get(url)
+            .await
+            .expect("failed to request")
+            .text()
+            .await
+            .expect("failed to request");
+        html
+    }
+    fn equal(samples: &[(String, String)], expecteds: &[(&str, &str)]) {
+        let expecteds = expecteds
+            .into_iter()
+            .map(|x| (x.0.to_string(), x.1.to_string()))
+            .collect::<Vec<_>>();
+
+        for (i, (input, output)) in samples.into_iter().enumerate() {
+            let (expected_input, expected_output) = &expecteds[i];
+            assert!(
+                (input, output) == (expected_input, expected_output),
+                "Case {} is failed",
+                i
+            );
+        }
+        assert!(samples.len() == expecteds.len());
+    }
+    async fn test_sample_cases(url: &str, expecteds: &[(&str, &str)]) {
+        let html = request(url).await;
+        let parser = AtCoderParser::new(&html);
+        let samples = parser.sample_cases();
+        equal(&samples, &expecteds);
+    }
+
+    #[tokio::test]
+    async fn test_typical90_ag() {
+        let expecteds = vec![("2 3", "2"), ("3 4", "4"), ("3 6", "6")];
+        test_sample_cases(
+            "https://atcoder.jp/contests/typical90/tasks/typical90_ag",
+            &expecteds,
+        )
+        .await;
+    }
+}
