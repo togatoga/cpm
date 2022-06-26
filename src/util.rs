@@ -70,8 +70,8 @@ pub fn save_cookie_in_local(response: &reqwest::Response) -> Result<(), failure:
 }
 pub fn username_and_password() -> (String, String) {
     println!("Please input Your username and password");
-    let username = rpassword::read_password_from_tty(Some("Username > ")).unwrap();
-    let password = rpassword::read_password_from_tty(Some("Password > ")).unwrap();
+    let username = rpassword::prompt_password("Username > ").unwrap();
+    let password = rpassword::prompt_password("Password > ").unwrap();
     (username, password)
 }
 pub fn local_cookie_headers() -> Result<HeaderMap, failure::Error> {
