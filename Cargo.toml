@@ -10,7 +10,6 @@ edition = "2018"
 scraper = "0.13.0"
 clap = "3.2.6"
 url = "2.2.2"
-failure = "0.1.8"
 tokio = { version = "1.19.2", features = ["full"] }
 selectors = "0.23.0"
 rpassword = "6.0.1"
@@ -25,6 +24,7 @@ colored = "2.0.0"
 easy-scraper = "0.2.0"
 webbrowser = "0.7.1"
 unicode-xid = "0.2.3"
+anyhow = "1.0.58"
 
 [dependencies.reqwest]
 git = "https://github.com/seanmonstar/reqwest"

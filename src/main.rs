@@ -40,7 +40,7 @@ struct Config {
     root: String,
 }
 
-fn init_config() -> Result<(), failure::Error> {
+fn init_config() -> Result<(), anyhow::Error> {
     std::fs::create_dir_all(dirs::home_dir().unwrap().join(".config").join("cpm"))?;
 
     let config_file = dirs::home_dir()
@@ -73,7 +73,7 @@ fn init_config() -> Result<(), failure::Error> {
 
     Ok(())
 }
-fn load_config() -> Result<Config, failure::Error> {
+fn load_config() -> Result<Config, anyhow::Error> {
     let config_file = dirs::home_dir()
         .unwrap()
         .join(".config")
@@ -111,7 +111,7 @@ impl Cpm {
         url: &url::Url,
         parser: &T,
         sample_verbose: bool,
-    ) -> Result<(), failure::Error> {
+    ) -> Result<(), anyhow::Error> {
         let host_name = url.host_str().unwrap();
         let config = load_config()?;
         let path = {
@@ -159,11 +159,11 @@ impl Cpm {
         );
         Ok(())
     }
-    pub fn init(&self) -> Result<(), failure::Error> {
+    pub fn init(&self) -> Result<(), anyhow::Error> {
         init_config()?;
         Ok(())
     }
-    pub async fn get(&mut self, url: &str) -> Result<(), failure::Error> {
+    pub async fn get(&mut self, url: &str) -> Result<(), anyhow::Error> {
         let url = url::Url::parse(url)?;
 
         let host = url.host_str();
@@ -218,7 +218,7 @@ impl Cpm {
         }
         Ok(())
     }
-    pub async fn download(&mut self, url: &str) -> Result<(), failure::Error> {
+    pub async fn download(&mut self, url: &str) -> Result<(), anyhow::Error> {
         let url = url::Url::parse(url)?;
         if let Ok(cookie_headers) = util::local_cookie_headers() {
             self.cookie_headers = cookie_headers;
@@ -240,19 +240,19 @@ impl Cpm {
         println!("=============================");
         Ok(())
     }
-    pub fn open(&self) -> Result<(), failure::Error> {
+    pub fn open(&self) -> Result<(), anyhow::Error> {
         let file = std::fs::File::open(".problem.json")?;
         let reader = BufReader::new(file);
         let info: ProblemInfo = serde_json::from_reader(reader)?;
         webbrowser::open(&info.url)?;
         Ok(())
     }
-    pub fn root(&self) -> Result<(), failure::Error> {
+    pub fn root(&self) -> Result<(), anyhow::Error> {
         let config = load_config()?;
         println!("{}", config.root);
         Ok(())
     }
-    pub fn list(&self, all: bool) -> Result<(), failure::Error> {
+    pub fn list(&self, all: bool) -> Result<(), anyhow::Error> {
         let config = load_config()?;
         for entry in walkdir::WalkDir::new(config.root)
             .into_iter()
@@ -291,7 +291,7 @@ impl Cpm {
         }
         Ok(())
     }
-    pub fn test(&self, command: &str) -> Result<(), failure::Error> {
+    pub fn test(&self, command: &str) -> Result<(), anyhow::Error> {
         //current dir is problem?
         let mut sample_case_paths = vec![]; //(input, output)
         if std::path::Path::new(".problem.json").exists()
@@ -403,7 +403,7 @@ impl Cpm {
         Ok(())
     }
 
-    pub async fn login(&mut self, url: &str) -> Result<(), failure::Error> {
+    pub async fn login(&mut self, url: &str) -> Result<(), anyhow::Error> {
         let url = url::Url::parse(url)?;
         let resp = self.call_get_request(url.as_str()).await?;
         self.parse_response(resp).await?;
@@ -449,7 +449,7 @@ impl Cpm {
         Ok(resp)
     }
 
-    async fn parse_response(&mut self, response: reqwest::Response) -> Result<(), failure::Error> {
+    async fn parse_response(&mut self, response: reqwest::Response) -> Result<(), anyhow::Error> {
         //cookie
         let mut cookie_headers = HeaderMap::new();
         response.cookies().for_each(|cookie| {

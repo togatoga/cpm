@@ -13,7 +13,7 @@ pub struct ProblemInfo {
     pub problem_name: String,
 }
 
-pub fn create_problem_info_json(info: ProblemInfo, path: &Path) -> Result<(), failure::Error> {
+pub fn create_problem_info_json(info: ProblemInfo, path: &Path) -> Result<(), anyhow::Error> {
     let mut json_file = std::fs::OpenOptions::new()
         .write(true)
         .create(true)
@@ -24,7 +24,7 @@ pub fn create_problem_info_json(info: ProblemInfo, path: &Path) -> Result<(), fa
 pub fn create_sample_test_files(
     test_cases: &[(String, String)],
     path: Option<&str>,
-) -> Result<(), failure::Error> {
+) -> Result<(), anyhow::Error> {
     let root_path = if let Some(p) = path {
         std::path::PathBuf::from(p)
     } else {
@@ -50,7 +50,7 @@ pub fn create_sample_test_files(
     }
     Ok(())
 }
-pub fn save_cookie_in_local(response: &reqwest::Response) -> Result<(), failure::Error> {
+pub fn save_cookie_in_local(response: &reqwest::Response) -> Result<(), anyhow::Error> {
     let cookies_str = response
         .cookies()
         .map(|cookie| format!("{}={}", cookie.name(), cookie.value()))
@@ -74,7 +74,7 @@ pub fn username_and_password() -> (String, String) {
     let password = rpassword::prompt_password("Password > ").unwrap();
     (username, password)
 }
-pub fn local_cookie_headers() -> Result<HeaderMap, failure::Error> {
+pub fn local_cookie_headers() -> Result<HeaderMap, anyhow::Error> {
     let cookiejar_path = dirs::home_dir().unwrap().join(".cpm").join("cookie.jar");
     let file = std::fs::File::open(cookiejar_path)?;
     let reader = std::io::BufReader::new(file);
