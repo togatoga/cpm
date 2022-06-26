@@ -246,9 +246,6 @@ impl AtCoderParser {
 
 #[cfg(test)]
 mod tests {
-    use std::fmt::format;
-
-    use serde::de::value::MapAccessDeserializer;
 
     use crate::parser::Parser;
 
@@ -263,7 +260,7 @@ mod tests {
             .expect("failed to request");
         html
     }
-    fn equal(samples: &[(String, String)], expecteds: &[(&str, &str)]) {
+    fn equal(samples: &[(String, String)], expecteds: &[(&str, &str)], url: &str) {
         let expecteds = expecteds
             .into_iter()
             .map(|x| (x.0.to_string(), x.1.to_string()))
@@ -273,24 +270,67 @@ mod tests {
             let (expected_input, expected_output) = &expecteds[i];
             assert!(
                 (input, output) == (expected_input, expected_output),
-                "Case {} is failed",
-                i
+                "URL: {} Case: {} {:?}:{:?}",
+                url,
+                i,
+                (input, output),
+                (expected_input, expected_output)
             );
         }
         assert!(samples.len() == expecteds.len());
     }
-    async fn test_sample_cases(url: &str, expecteds: &[(&str, &str)]) {
+    async fn assert_sample_cases(url: &str, expecteds: &[(&str, &str)]) {
         let html = request(url).await;
         let parser = AtCoderParser::new(&html);
         let samples = parser.sample_cases();
-        equal(&samples, &expecteds);
+        equal(&samples, &expecteds, url);
     }
 
     #[tokio::test]
-    async fn test_typical90_ag() {
+    async fn test_sample_cases() {
         let expecteds = vec![("2 3", "2"), ("3 4", "4"), ("3 6", "6")];
-        test_sample_cases(
+        assert_sample_cases(
             "https://atcoder.jp/contests/typical90/tasks/typical90_ag",
+            &expecteds,
+        )
+        .await;
+
+        let expecteds = vec![
+            ("4 6", "12"),
+            ("1000000000000000000 3", "Large"),
+            ("1000000000000000000 1", "1000000000000000000"),
+        ];
+        assert_sample_cases(
+            "https://atcoder.jp/contests/typical90/tasks/typical90_al",
+            &expecteds,
+        )
+        .await;
+
+        let expecteds = vec![
+            ("5\n180 186 189 191 218", "Yes\n1 1\n2 3 4"),
+            ("2\n123 523", "Yes\n1 1\n1 2"),
+            ("6\n2013 1012 2765 2021 508 6971", "No"),
+        ];
+        assert_sample_cases(
+            "https://atcoder.jp/contests/abc200/tasks/abc200_d",
+            &expecteds,
+        )
+        .await;
+
+        let expecteds = vec![("999 434", "2"), ("255 15", "2"), ("9999999999 1", "0")];
+        assert_sample_cases(
+            "https://atcoder.jp/contests/typical90/tasks/typical90_y",
+            &expecteds,
+        )
+        .await;
+
+        let expecteds = vec![
+            ("3 3\n122\n131\n322", "2"),
+            ("3 3\n111\n231\n321", "0"),
+            ("4 5\n12334\n41123\n43214\n21344", "5"),
+        ];
+        assert_sample_cases(
+            "https://atcoder.jp/contests/code-festival-2015-relay/tasks/cf_2015_relay_h",
             &expecteds,
         )
         .await;
