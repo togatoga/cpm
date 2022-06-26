@@ -39,6 +39,7 @@ impl SubCommand {
 struct Config {
     root: String,
 }
+
 fn init_config() -> Result<(), failure::Error> {
     std::fs::create_dir_all(dirs::home_dir().unwrap().join(".config").join("cpm"))?;
 

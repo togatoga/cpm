@@ -1,7 +1,10 @@
 use itertools::Itertools;
 use reqwest::header::{HeaderMap, HeaderValue, COOKIE};
 use serde::{Deserialize, Serialize};
-use std::{io::{BufRead, Write}, path::Path};
+use std::{
+    io::{BufRead, Write},
+    path::Path,
+};
 
 #[derive(Serialize, Deserialize)]
 pub struct ProblemInfo {
@@ -10,10 +13,7 @@ pub struct ProblemInfo {
     pub problem_name: String,
 }
 
-pub fn create_problem_info_json(
-    info: ProblemInfo,
-    path: &Path,
-) -> Result<(), failure::Error> {
+pub fn create_problem_info_json(info: ProblemInfo, path: &Path) -> Result<(), failure::Error> {
     let mut json_file = std::fs::OpenOptions::new()
         .write(true)
         .create(true)
