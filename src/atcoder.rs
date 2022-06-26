@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use crate::parser::Parser;
 use easy_scraper::Pattern;
 pub struct AtCoderParser {
@@ -128,35 +130,61 @@ impl AtCoderParser {
         )
         .unwrap();
 
-        let mut input_cases = vec![];
-        let mut output_cases = vec![];
         // try an English first
         let en_ms = en_pattern.matches(&self.html);
-        if en_ms.is_empty() {
-            ja_input_pattern
-                .matches(&self.html)
-                .into_iter()
-                .for_each(|m| input_cases.push(m["value"].to_string()));
-            ja_output_pattern
-                .matches(&self.html)
-                .into_iter()
-                .for_each(|m| output_cases.push(m["value"].to_string()));
-        } else {
-            for m in en_ms.iter() {
-                match m["type"].as_str() {
-                    "Input" => input_cases.push(m["value"].to_string()),
-                    "Output" => output_cases.push(m["value"].to_string()),
-                    _ => {
-                        panic!("UNKNOWN type: {}", m["type"]);
-                    }
-                };
-            }
-        }
-        input_cases
+        let ja_input_cases = ja_input_pattern
+            .matches(&self.html)
             .into_iter()
-            .zip(output_cases)
-            .map(|(input, output)| (input, output))
-            .collect()
+            .map(|m| (m["id"].to_string(), m["value"].to_string()))
+            .collect::<Vec<_>>();
+        let ja_id_to_output_case = ja_output_pattern
+            .matches(&self.html)
+            .into_iter()
+            .map(|m| (m["id"].to_string(), m["value"].to_string()))
+            .collect::<BTreeMap<String, String>>();
+        let mut en_input_cases = vec![];
+        let mut en_id_to_output_case = BTreeMap::default();
+        for m in en_ms.iter() {
+            match m["type"].as_str() {
+                "Input" => {
+                    en_input_cases.push((m["id"].to_string(), m["value"].to_string()));
+                }
+                "Output" => {
+                    en_id_to_output_case.insert(m["id"].to_string(), m["value"].to_string());
+                }
+
+                _ => {
+                    panic!("UNKNOWN type: {}", m["type"]);
+                }
+            };
+        }
+        if !ja_input_cases.is_empty() {
+            ja_input_cases
+                .into_iter()
+                .map(|(id, input)| {
+                    (
+                        input,
+                        ja_id_to_output_case
+                            .get(&id)
+                            .unwrap_or(&"".to_string())
+                            .clone(),
+                    )
+                })
+                .collect::<Vec<(String, String)>>()
+        } else {
+            en_input_cases
+                .into_iter()
+                .map(|(id, input)| {
+                    (
+                        input,
+                        en_id_to_output_case
+                            .get(&id)
+                            .unwrap_or(&"".to_string())
+                            .clone(),
+                    )
+                })
+                .collect::<Vec<(String, String)>>()
+        }
     }
 
     fn extract_old_format_sample_cases(&self) -> Option<Vec<(String, String)>> {
@@ -262,11 +290,11 @@ mod tests {
     }
     fn equal(samples: &[(String, String)], expecteds: &[(&str, &str)], url: &str) {
         let expecteds = expecteds
-            .into_iter()
+            .iter()
             .map(|x| (x.0.to_string(), x.1.to_string()))
             .collect::<Vec<_>>();
 
-        for (i, (input, output)) in samples.into_iter().enumerate() {
+        for (i, (input, output)) in samples.iter().enumerate() {
             let (expected_input, expected_output) = &expecteds[i];
             assert!(
                 (input, output) == (expected_input, expected_output),
@@ -283,7 +311,7 @@ mod tests {
         let html = request(url).await;
         let parser = AtCoderParser::new(&html);
         let samples = parser.sample_cases();
-        equal(&samples, &expecteds, url);
+        equal(&samples, expecteds, url);
     }
 
     #[tokio::test]
@@ -332,6 +360,28 @@ mod tests {
         assert_sample_cases(
             "https://atcoder.jp/contests/code-festival-2015-relay/tasks/cf_2015_relay_h",
             &expecteds,
+        )
+        .await;
+    }
+    #[tokio::test]
+    async fn test_abc057_d() {
+        assert_sample_cases("https://atcoder.jp/contests/abc057/tasks/abc057_d", 
+        &[("5 2 2\n1 2 3 4 5", "4.500000\n1"),
+            ("4 2 3\n10 20 10 10", "15.000000\n3"),
+            ("5 1 5\n1000000000000000 999999999999999 999999999999998 999999999999997 999999999999996", "1000000000000000.000000\n1"),
+            ("50 1 50\n1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1", "1.000000\n1125899906842623")]).await;
+    }
+
+    #[tokio::test]
+    async fn test_abc161_e() {
+        assert_sample_cases(
+            "https://atcoder.jp/contests/abc161/tasks/abc161_e",
+            &[
+                ("11 3 2\nooxxxoxxxoo", "6"),
+                ("5 2 3\nooxoo", "1\n5"),
+                ("5 1 0\nooooo", ""),
+                ("16 4 3\nooxxoxoxxxoxoxxo", "11\n16"),
+            ],
         )
         .await;
     }
