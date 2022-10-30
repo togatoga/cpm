@@ -1,3 +1,4 @@
+use chrono::Utc;
 use colored::*;
 use cpm::codeforces::CodeforcesParser;
 use cpm::parser::Parser;
@@ -151,6 +152,7 @@ impl Cpm {
             url: url.to_string(),
             contest_name: parser.contest_name().expect("failed to get contest name"),
             problem_name: parser.problem_name().expect("failed to get problem name"),
+            created_at: Some(Utc::now()),
         };
         util::create_problem_info_json(info, &path)?;
         println!(
@@ -252,41 +254,58 @@ impl Cpm {
         println!("{}", config.root);
         Ok(())
     }
-    pub fn list(&self, all: bool) -> Result<(), anyhow::Error> {
+    pub fn list(&self, all: bool, recent: bool) -> Result<(), anyhow::Error> {
         let config = load_config()?;
-        for entry in walkdir::WalkDir::new(config.root)
+        let now = Utc::now();
+        for (parent, entry) in walkdir::WalkDir::new(config.root)
             .into_iter()
             .filter_map(|e| e.ok())
+            .filter(|dir| {
+                let file_name = dir.file_name().to_str().unwrap();
+                file_name == ".problem" || file_name == ".problem.json"
+            })
+            .filter_map(|entry| {
+                entry
+                    .path()
+                    .parent()
+                    .map(|dir| (dir.to_string_lossy().to_string(), entry.clone()))
+            })
         {
-            let file_name = entry.file_name().to_str().unwrap();
-            if file_name == ".problem" || file_name == ".problem.json" {
-                if let Some(dir) = entry.path().parent() {
-                    if all {
-                        let f = File::open(entry.path())?;
-                        let reader = BufReader::new(f);
-                        if let Ok(info) = serde_json::from_reader::<_, ProblemInfo>(reader) {
-                            let contest_name = info
-                                .contest_name
-                                .chars()
-                                .filter(|&c| c != '\n' && c != '\t')
-                                .collect::<String>();
-                            let problem_name = info
-                                .problem_name
-                                .chars()
-                                .filter(|&c| c != '\n' && c != '\t')
-                                .collect::<String>();
+            let reader = BufReader::new(File::open(entry.path())?);
+            let info = serde_json::from_reader::<_, ProblemInfo>(reader);
 
-                            println!(
-                                "{} {} {}",
-                                contest_name,
-                                problem_name,
-                                dir.to_str().unwrap(),
-                            );
-                            continue;
-                        }
-                    }
-                    println!("{}", dir.to_str().unwrap());
+            if let Ok(info) = info {
+                let contest_name = info
+                    .contest_name
+                    .chars()
+                    .filter(|&c| c != '\n' && c != '\t')
+                    .collect::<String>();
+                let problem_name = info
+                    .problem_name
+                    .chars()
+                    .filter(|&c| c != '\n' && c != '\t')
+                    .collect::<String>();
+
+                // An old format doesn't support `created_at`. Skip it
+                if recent
+                    && info
+                        .created_at
+                        .map_or(true, |created_at| (now - created_at).num_hours() >= 24)
+                {
+                    continue;
                 }
+
+                if all {
+                    println!("{} {} {}", contest_name, problem_name, parent);
+                } else {
+                    println!("{}", parent);
+                }
+            } else {
+                // An old format doesn't support `created_at`. Skip it
+                if recent {
+                    continue;
+                }
+                println!("{}", parent);
             }
         }
         Ok(())
@@ -516,7 +535,10 @@ Example:
         .subcommand(
             clap::SubCommand::with_name(&SubCommand::List.value())
                 .about("List local directories under root path")
-                .arg_from_usage("-a, --all 'Prints all information of the problem'"),
+                .arg_from_usage("-a, --all 'Print problem's information(contest name, problem name, directory).")
+                .arg_from_usage(
+                    "-r, --recent 'Print only recent problems (less than 24 hours).'",
+                ),
         )
         .subcommand(
             clap::SubCommand::with_name(&SubCommand::Test.value())
@@ -609,7 +631,7 @@ Example:
     }
 
     if let Some(args) = matches.subcommand_matches(&SubCommand::List.value()) {
-        match cpm.list(args.is_present("all")) {
+        match cpm.list(args.is_present("all"), args.is_present("recent")) {
             Ok(_) => {
                 std::process::exit(0);
             }

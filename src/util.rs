@@ -1,3 +1,5 @@
+use chrono::Utc;
+use chrono::serde::ts_seconds_option;
 use itertools::Itertools;
 use reqwest::header::{HeaderMap, HeaderValue, COOKIE};
 use serde::{Deserialize, Serialize};
@@ -6,11 +8,13 @@ use std::{
     path::Path,
 };
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct ProblemInfo {
     pub url: String,
     pub contest_name: String,
     pub problem_name: String,
+    #[serde(with = "ts_seconds_option")]
+    pub created_at: Option<chrono::DateTime<Utc>>,
 }
 
 pub fn create_problem_info_json(info: ProblemInfo, path: &Path) -> Result<(), anyhow::Error> {
