@@ -24,8 +24,4 @@ easy-scraper = "0.2.0"
 webbrowser = "0.7.1"
 anyhow = "1.0.58"
 chrono = { version = "0.4.22", features = ["serde"] }
-
-[dependencies.reqwest]
-git = "https://github.com/seanmonstar/reqwest"
-branch = "master"
-features = ["cookies"]
+reqwest = { version = "0.11", features = ["cookies"] }
