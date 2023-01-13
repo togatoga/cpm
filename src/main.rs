@@ -209,7 +209,19 @@ impl Cpm {
                 let resp = self.call_get_request(url.as_str()).await?;
                 self.parse_response(resp).await?;
                 let parser = CodeforcesParser::new(self.html.as_ref().unwrap());
-                self.create_problem_dir(&url, &parser, true)?;
+                let problem_url_list = parser.problem_url_list(url.path());
+
+                if !problem_url_list.is_empty() {
+                    for task_url in problem_url_list.iter() {
+                        let task_url = url.join(task_url)?;
+                        let resp = self.call_get_request(task_url.as_str()).await?;
+                        self.parse_response(resp).await?;
+                        let parser = CodeforcesParser::new(self.html.as_ref().unwrap());
+                        self.create_problem_dir(&task_url, &parser, false)?;
+                    }
+                } else {
+                    self.create_problem_dir(&url, &parser, true)?;
+                }
             }
             Some(host) => {
                 println!("{} isn't supported yet. X(", host);

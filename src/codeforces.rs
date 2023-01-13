@@ -1,6 +1,7 @@
 use crate::parser::Parser;
 use easy_scraper::Pattern;
 use itertools::Itertools;
+use scraper::Selector;
 
 pub struct CodeforcesParser {
     document: String,
@@ -11,6 +12,24 @@ impl CodeforcesParser {
         CodeforcesParser {
             document: html.to_string(),
         }
+    }
+}
+
+impl CodeforcesParser {
+    pub fn problem_url_list(&self, path: &str) -> Vec<String> {
+        let document = scraper::Html::parse_document(&self.document);
+        let selector = Selector::parse("a").expect("invalid selector");
+
+        let mut problem_url_list = document
+            .select(&selector)
+            .filter_map(|element| element.value().attr("href"))
+            // e.g /contest/1234/problem/A
+            .filter(|url| url.starts_with(path) && url.split('/').contains(&"problem"))
+            .map(|url| url.to_string())
+            .collect::<Vec<_>>();
+        problem_url_list.sort();
+        problem_url_list.dedup();
+        problem_url_list
     }
 }
 
