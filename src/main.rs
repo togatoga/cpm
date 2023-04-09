@@ -499,7 +499,7 @@ impl Cpm {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let matches = clap::App::new("cpm")
         .version("1.1")
-        .author("Hitoshi Togasaki. <togasakitogatoga+github.com>")
+        .author("Hitoshi Togasaki. <hitoshitogasaki@gmail.com>")
         .about(
             "Download sample test cases of AtCoder problem
 
