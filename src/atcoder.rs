@@ -280,13 +280,13 @@ mod tests {
     use super::AtCoderParser;
 
     async fn request(url: &str) -> String {
-        let html = reqwest::get(url)
+        
+        reqwest::get(url)
             .await
             .expect("failed to request")
             .text()
             .await
-            .expect("failed to request");
-        html
+            .expect("failed to request")
     }
     fn equal(samples: &[(String, String)], expecteds: &[(&str, &str)], url: &str) {
         let expecteds = expecteds

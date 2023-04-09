@@ -79,10 +79,9 @@ impl Parser for CodeforcesParser {
             .map(|sample| {
                 let sample_inputs = sample
                     .select(&input_selector)
-                    .into_iter()
                     .filter_map(|input| {
                         input.select(&pre_selector).next().and_then(|pre| {
-                            let sample_input = pre.text().into_iter().join("\n");
+                            let sample_input = pre.text().join("\n");
                             if sample_input.is_empty() {
                                 None
                             } else {
@@ -93,10 +92,9 @@ impl Parser for CodeforcesParser {
                     .collect::<Vec<String>>();
                 let sample_outputs = sample
                     .select(&output_selector)
-                    .into_iter()
                     .filter_map(|output| {
                         output.select(&pre_selector).next().and_then(|pre| {
-                            let sample_output = pre.text().into_iter().join("\n");
+                            let sample_output = pre.text().join("\n");
                             if sample_output.is_empty() {
                                 None
                             } else {
