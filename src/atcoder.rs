@@ -280,7 +280,6 @@ mod tests {
     use super::AtCoderParser;
 
     async fn request(url: &str) -> String {
-        
         reqwest::get(url)
             .await
             .expect("failed to request")

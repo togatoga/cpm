@@ -21,6 +21,7 @@ pub fn create_problem_info_json(info: ProblemInfo, path: &Path) -> Result<(), an
     let mut json_file = std::fs::OpenOptions::new()
         .write(true)
         .create(true)
+        .truncate(true)
         .open(path.join(".problem.json"))?;
     json_file.write_all(serde_json::to_string(&info).unwrap().as_bytes())?;
     Ok(())
